@@ -1,0 +1,5 @@
+*.pdf
+*.zip
+vgcore*
+node_modules
+package*.json
