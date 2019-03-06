@@ -42,3 +42,43 @@ input[type=submit], button {
         width: 100% !important;
     }
 }
+
+/* I'm adding some stuff to the CSS style sheet too! (Even though it isn't necessary) */
+
+/* There are no borders for any table */
+table {
+    border-collapse: collapse;
+}
+
+/* Table headers and cells are padded away from the borders, and are cetner aligned */
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+/* Every 2nd, 4th, 6th, ..., row has a slightly darker background */
+tr:nth-child(even) {
+    background-color: #f0f0f0;
+}
+
+/* The area of the table defined inside the <thead> block is styled differently*/
+thead {
+    border-bottom-style: solid;
+    background-color: #c0c0c0;
+}
+
+/* Textareas cant be resized */
+textarea {
+    resize: none;
+    overflow:auto;
+}
+
+/* Buttons look pretty */
+button {
+    background-color: #6060BB;
+    border: 5px outset #5050AA;
+    color: white;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+}
