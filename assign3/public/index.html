@@ -25,6 +25,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
 <!-- # Here we're loading our custom Style -->
         <!-- Custom CSS -->
         <link rel="stylesheet" type="text/css" href="/style.css">
@@ -70,13 +71,16 @@
         <!-- Status panel -->
         <div align="center" style="overflow-y:auto">
             <textarea id="statusText" cols="100" rows="3" name="Status Panel" placeHolder="Status Panel" readonly="readonly"></textarea>
-            <button type="button" onclick="clearText($('#statusText'));">Clear</button>
+            <button type="button" onclick="clearText('statusText');">Clear</button>
             <!--<button type="button" onclick="addText($('#statusText'), 'new text');">Clear</button>-->
         </div>
 
         <!-- File Log Panel -->
+
+        <!-- Download file: https://www.w3schools.com/howto/howto_html_download_link.asp -->
         <hr>
         <div align="center" style="overflow:auto">
+            <!-- Calendar file table -->
             <table>
                 <thead>
                     <tr>
@@ -104,11 +108,33 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div>
+                <button type="button" style="margin-top: 15px">Upload file</button>
+            </div>
         </div>
 
         <!-- Calendar View Panel -->
         <hr>
-        <div align="center" style="overflow:auto">
+        <div class="clearfix">
+            <!-- Drop-down menu to select which file to view -->
+            <div>
+                <label for="fileSelector">Calendar File to View:</label>
+                <select id="fileSelector" style="margin-left:10px;max-width:30em">
+                    <option value="test1">file1.ics</toption>
+                    <option value="test2">file2.ics</toption>
+                    <option value="test3">file3.ics</toption>
+                    <option value="test4">thisIsAVeryLongFileNameForACalendarFileThatIsSuperDuperrDuperLong.ics</option>
+                </select>
+                <button id="addEventButton">Add Event To This Calendar</button>
+                <button id="createCalendarButton">Create New Calendar</button>
+            </div>
+
+            <!-- "Show Alarms" Button -->
+        </div>
+
+        <!-- Table to view the events/information of the file -->
+        <div align="center" style="overflow:auto;padding:20px">
             <table>
                 <thead>
                     <tr>
@@ -133,11 +159,24 @@
             </table>
         </div>
 
-        <!-- Literally everything else -->
-        <hr>
-        <div align="center">
-            Literally Everything Else
+        <div class="clearfix">
+            <div>
+                <button type="submit" form="eventNo" style="float:left">Show Alarms For Event No.</button>
+                <button type="submit" form="eventNo" style="float:left">Show Properties For Event No.</button>
+                <form id="eventNo">
+                    <input type="number" placeholder="Event No." style="float:left">
+                </form>
+            </div>
         </div>
+
+        <!-- If you can't figure out how to make popups, then you'll have to add that
+        functionality as static HTML down here. The 'fieldset' attribute for forms looks like
+        it could be good: https://www.w3schools.com/html/html_forms.asp
+        Define a class in the CSS file that just hides everything (display: none), and then the
+        buttons just set the 'display' property to 'block' using jQuery .css("display","block" -->
+
+        <!-- This could also be used as a 'popup':
+        https://www.w3schools.com/howto/howto_js_popup_chat.asp -->
 
         <!-- Leave me at the bottom of body -->
         <script src="/index.js"></script>

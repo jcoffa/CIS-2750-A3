@@ -31,11 +31,12 @@ $(document).ready(function() {
     }); 
 });
 
-// Event listener to clear the text of an element
-function clearText(element) {
-    element.val("");
+// Clears the text of an element
+function clearText(id) {
+    $('#' + id).val("");
 }
 
+// Adds text to a textarea
 function addText(textarea, message) {
     var currentText = textarea.val();
     if (currentText === "") {

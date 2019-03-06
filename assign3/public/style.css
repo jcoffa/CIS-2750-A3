@@ -76,9 +76,26 @@ textarea {
 /* Buttons look pretty */
 button {
     background-color: #6060BB;
-    border: 5px outset #5050AA;
+    border: 5px outset #5555AF;
     color: white;
     text-align: center;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+/* Make rows of elements better */
+.clearfix::after {
+    content: "";
+    clear: both;
+    display: table;
+    margin-bottom: 10px;
+}
+
+/* Horizontal Rules <hr> look a little different */
+hr {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border: 3px outset #CFCFFF;
 }
