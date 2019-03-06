@@ -28,5 +28,19 @@ $(document).ready(function() {
         $('#blah').html("Callback from the form");
         e.preventDefault();
         $.ajax({});
-    });
+    }); 
 });
+
+// Event listener to clear the text of an element
+function clearText(element) {
+    element.val("");
+}
+
+function addText(textarea, message) {
+    var currentText = textarea.val();
+    if (currentText === "") {
+        textarea.val(message);
+    } else {
+        textarea.val(currentText + "\n" + message);
+    }
+}

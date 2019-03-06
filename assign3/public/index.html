@@ -10,7 +10,7 @@
     <head>
 <!-- # Here is some metadata about the file, you can change those values to match your own -->
         <title>iCalendar File Manager</title>
-        <meta name="description" content="Create, view, and manage virtual calendar (iCalendar) files">
+        <meta name="description" content="Create, view, upload, and download virtual calendar (iCalendar) files">
         <meta name="keywords" content="iCalendar, iCal, ics, University of Guelph, UoG, UofG, CIS*2750, CIS 2750, Angel, Angel of Death">
         <meta name="author" content="Joseph Coffa">
         <meta charset="utf-8">
@@ -30,29 +30,114 @@
         <link rel="stylesheet" type="text/css" href="/style.css">
         <!-- Custom CSS End -->
     </head>
+
+
+
 <!-- # The body contains all of our elements, divs, tables, forms, ... -->
+
+    <!-- The body is where the actual meat of the website is written. You can add all the <div> elements, which are like
+         blank panels in Java where you can put stuff in. -->
     <body>
 <!-- # A link for verifying that file download functionality works -->
+        <!--
         <h3>Download test</h3>
         If the A3 stub is running and testCalSimpleUTC.ics exists in the uploads/ directory on the server, then clicking on the link below will download it from the server.<br>
         <a href="/uploads/testCalSimpleUTC.ics">testCalSimpleUTC.ics</a>
         <hr>
+        -->
 
         <!-- Everything below this line and above the 'src="/index.js"' part is not in the .pdf file mentioned at the top of the file.
              It creates a couple of static HTML elements that you can view in the browser. -->
+
+        <!--
         <div id="blah">I am blah</div>
         <hr>
         <form ref='someform'
               id='someform'>
-              <div class="form-group">
-                    <label for="entryBox">Last Name</label>
-                    <input type="text" class="form-control" id="entryBox" value="Value" placeholder="Placeholder">
-                </div>
+            <div class="form-group">
+                <label for="entryBox">Last Name</label>
+                <input type="text" class="form-control" id="entryBox" value="Value" placeholder="Placeholder">
+            </div>
             <div class="form-group">
                 <input type='submit' class="btn btn-secondary">
             </div>
         </form>
+        -->
 
+        <h1>iCalendar File Manager</h1>
+        <hr>
+
+        <!-- Status panel -->
+        <div align="center" style="overflow-y:auto">
+            <textarea id="statusText" cols="100" rows="3" name="Status Panel" placeHolder="Status Panel" readonly="readonly"></textarea>
+            <button type="button" onclick="clearText($('#statusText'));">Clear</button>
+            <!--<button type="button" onclick="addText($('#statusText'), 'new text');">Clear</button>-->
+        </div>
+
+        <!-- File Log Panel -->
+        <hr>
+        <div align="center" style="overflow:auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="20%">File Name<br>(click to download)</th>
+                        <th>Version</th>
+                        <th width="60%">Product ID</th>
+                        <th># Events</th>
+                        <th># Properties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>This</td>
+                        <td>is</td>
+                        <td>another</td>
+                        <td>row,</td>
+                        <td>see?</td>
+                    </tr>
+                    <tr>
+                        <td>And</td>
+                        <td>yet</td>
+                        <td>another</td>
+                        <td>row</td>
+                        <td>appears!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Calendar View Panel -->
+        <hr>
+        <div align="center" style="overflow:auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event No.</th>
+                        <th>Start Date</th>
+                        <th>Start Time</th>
+                        <th width="50%">Summary</th>
+                        <th># Properties</th>
+                        <th># Alarms</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>20190306</td>
+                        <td>1200000</td>
+                        <td>This is an example summary</td>
+                        <td>2</td>
+                        <td>1</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Literally everything else -->
+        <hr>
+        <div align="center">
+            Literally Everything Else
+        </div>
 
         <!-- Leave me at the bottom of body -->
         <script src="/index.js"></script>
