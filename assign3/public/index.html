@@ -110,7 +110,7 @@
             </table>
 
             <div>
-                <button type="button" style="margin-top: 15px">Upload file</button>
+                Upload File: <input id="uploadFile" name="uploadFile" type="file" style="margin-top: 15px"></input>
             </div>
         </div>
 
@@ -164,19 +164,22 @@
                 <button type="submit" form="eventNo" style="float:left">Show Alarms For Event No.</button>
                 <button type="submit" form="eventNo" style="float:left">Show Properties For Event No.</button>
                 <form id="eventNo">
-                    <input type="number" placeholder="Event No." style="float:left">
+                    <input type="number" min="1" placeholder="Event No." style="float:left">
                 </form>
             </div>
         </div>
+
+        <!-- Looks like this can be used to make the 'Add Event' and 'Create New Calendar' popups:
+        https://www.w3schools.com/howto/howto_css_modals.asp -->
+
+        <!-- If you can't put forms in that, then try this instead:
+        https://www.w3schools.com/howto/howto_js_popup_form.asp -->
 
         <!-- If you can't figure out how to make popups, then you'll have to add that
         functionality as static HTML down here. The 'fieldset' attribute for forms looks like
         it could be good: https://www.w3schools.com/html/html_forms.asp
         Define a class in the CSS file that just hides everything (display: none), and then the
-        buttons just set the 'display' property to 'block' using jQuery .css("display","block" -->
-
-        <!-- This could also be used as a 'popup':
-        https://www.w3schools.com/howto/howto_js_popup_chat.asp -->
+        buttons just set the 'display' property to 'block' using jQuery .css("display","block")-->
 
         <!-- Leave me at the bottom of body -->
         <script src="/index.js"></script>
