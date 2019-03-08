@@ -161,25 +161,44 @@
 
         <div class="clearfix">
             <div>
-                <button type="submit" form="eventNo" style="float:left">Show Alarms For Event No.</button>
-                <button type="submit" form="eventNo" style="float:left">Show Properties For Event No.</button>
                 <form id="eventNo">
+                <button type="button" style="float:left">Show Alarms For Event No.</button>
+                <button type="button" style="float:left">Show Properties For Event No.</button>
                     <input type="number" min="1" placeholder="Event No." style="float:left">
                 </form>
             </div>
         </div>
 
-        <!-- Looks like this can be used to make the 'Add Event' and 'Create New Calendar' popups:
-        https://www.w3schools.com/howto/howto_css_modals.asp -->
+        <!-- Modals: https://www.w3schools.com/howto/howto_css_modals.asp -->
+        <div id="addEventModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Event</h2>
+                    <span id="closeModalEvent" class="close">X</span>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm">
+                        Start Date: <input type="date" name="startDate"></input><br>
+                        Start Time: <input type="time" name="startTime"></input>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        <!-- If you can't put forms in that, then try this instead:
-        https://www.w3schools.com/howto/howto_js_popup_form.asp -->
+        <div id="createCalendarModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create New Calendar</h2>
+                    <span id="closeModalCalendar" class="close">X</span>
+                </div>
+                <div class="modal-body">
+                    <form id="calendarForm">
+                        File Name: <input typ="text" name="calFileName"></input>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-        <!-- If you can't figure out how to make popups, then you'll have to add that
-        functionality as static HTML down here. The 'fieldset' attribute for forms looks like
-        it could be good: https://www.w3schools.com/html/html_forms.asp
-        Define a class in the CSS file that just hides everything (display: none), and then the
-        buttons just set the 'display' property to 'block' using jQuery .css("display","block")-->
 
         <!-- Leave me at the bottom of body -->
         <script src="/index.js"></script>

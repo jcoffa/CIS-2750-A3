@@ -29,6 +29,26 @@ $(document).ready(function() {
         e.preventDefault();
         $.ajax({});
     }); 
+
+    // Event handler for modal Add Event
+    $('#addEventButton').click(function() {
+        $('#addEventModal').css("display", "block");
+    });
+
+    // Close modal Add Event
+    $('#closeModalEvent').click(function() {
+        $('#addEventModal').css("display", "none");
+    });
+
+    // Event handler for modal Create Calendar
+    $('#createCalendarButton').click(function() {
+        $('#createCalendarModal').css("display", "block");
+    });
+
+    // Close modal Create Calendar
+    $('#closeModalCalendar').click(function() {
+        $('#createCalendarModal').css("display", "none");
+    });
 });
 
 // Clears the text of an element
