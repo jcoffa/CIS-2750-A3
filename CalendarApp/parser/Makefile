@@ -40,44 +40,36 @@ parser: libcal.so
 liblist.so: LinkedListAPI.o
 	$(CC) -shared $(OUT)/LinkedListAPI.o -o $(OUT)/liblist.so
 
-LinkedListAPI.o: LinkedListAPI.c LinkedListAPI.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)/LinkedListAPI.c -o $(OUT)/LinkedListAPI.o
-
 libcal.so: CalendarParser.o
 	$(CC) -shared $(OUT)/CalendarParser.o -o $(OUT)/libcal.so
-
-CalendarParser.o: CalendarParser.c CalendarParser.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)/CalendarParser.c -o $(OUT)/CalendarParser.o
 
 libparsing.so: Parsing.o
 	$(CC) -shared $(OUT)/Parsing.o -o $(OUT)/libparsing.so
 
-Parsing.o: Parsing.c Parsing.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)/Parsing.c -o $(OUT)/Parsing.o
-
 libinit.so: Initialize.o
 	$(CC) -shared $(OUT)/Initialize.o -o $(OUT)/libinit.so
-
-Initialize.o: Initialize.c Initialize.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)/Initialize.c -o $(OUT)/Initialize.o
 
 libcalhelp.so: CalendarHelper.o
 	$(CC) -shared $(OUT)/CalendarHelper.o -o $(OUT)/libcalhelp.so
 
-CalendarHelper.o: CalendarHelper.c CalendarHelper.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)/CalendarHelper.c -o $(OUT)/CalendarHelper.o
-
 libdebug.so: Debug.o
 	$(CC) -shared $(OUT)/Debug.o -o $(OUT)/libdebug.so
 
-Debug.o: Debug.c Debug.h
-	$(CC) $(CFLAGS) -c -fpic $(SRC)/Debug.c -o $(OUT)/Debug.o
+# % = pattern match to any string (it stays consistent, so using it in multiple places
+#     will use the same string)
+# $< = the first prerequsiite of the rule (in this case, the .c source file)
+# $@ = the target of the rule (in this case, the .o object file)
+#
+# Because the VPATH variable is set, which tells make where to look for files,
+# you don't have to prefix the '$<' with '$(SRC)/' since it will already be baked into the prerequisite
+%.o: %.c %.h
+	$(CC) $(CFLAGS) -c -fpic $< -o $(OUT)/$@
 
 #############
 # Utilities #
 #############
 
-# removes all .o and .so files, and the main executable
+# removes all .o and .so files
 clean:
 	rm -f -r $(OUT)/*.o $(OUT)/*.so
 
