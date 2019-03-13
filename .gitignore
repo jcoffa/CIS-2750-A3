@@ -4,3 +4,6 @@ vgcore*
 node_modules
 package*.json
 CalendarApp/uploads/*
+CalendarApp/parser/AJAX
+CalendarApp/parser/bin/
+CalendarApp/libajaxstub.so
