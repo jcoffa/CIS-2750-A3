@@ -3,3 +3,4 @@
 vgcore*
 node_modules
 package*.json
+uploads/*
