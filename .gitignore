@@ -3,4 +3,4 @@
 vgcore*
 node_modules
 package*.json
-uploads/*
+CalendarApp/uploads/*
