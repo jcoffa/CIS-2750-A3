@@ -1,3 +1,19 @@
+// Clears the text of an element
+function clearText(id) {
+    $('#' + id).val("");
+}
+
+// Adds text to a textarea
+function addText(id, message) {
+    var textarea = $('#' + id)
+    var currentText = textarea.val();
+    if (currentText === "") {
+        textarea.val(message);
+    } else {
+        textarea.val(currentText + "\n" + message);
+    }
+}
+
 // Put all onload AJAX calls here, and event listeners
 $(document).ready(function() {
     // On page-load AJAX Example
@@ -11,7 +27,8 @@ $(document).ready(function() {
                 so we do not need to parse it on the server.
                 JavaScript really does handle JSONs seamlessly
             */
-            $('#blah').html("On page load, Received string '"+JSON.stringify(data)+"' from server");
+            addText('statusText', 'On page load, received string "' + JSON.stringify(data) + '" from server');
+            //$('#blah').html("On page load, Received string '"+JSON.stringify(data)+"' from server");
             //We write the object to the console to show that the request was successful
             console.log(data); 
 
@@ -21,14 +38,6 @@ $(document).ready(function() {
             console.log(error); 
         }
     });
-
-    // Event listener form replacement example, building a Single-Page-App, no redirects if possible
-    $('#someform').submit(function(e){
-        // Dummy output, to show that the form callback is working
-        $('#blah').html("Callback from the form");
-        e.preventDefault();
-        $.ajax({});
-    }); 
 
     // Event handler for modal Add Event
     $('#addEventButton').click(function() {
@@ -49,19 +58,44 @@ $(document).ready(function() {
     $('#closeModalCalendar').click(function() {
         $('#createCalendarModal').css("display", "none");
     });
+
+    // Event listener for the <input type='file'...> element
+    // The function executes after the user hits 'Browse' and selects a file
+    $('#uploadFile').on('change', function() {
+        var file = this.files[0];
+        // If the file does not end with .ics, it is invalid
+        if (!file.name.endsWith('.ics')) {
+            alert("File uploads must be iCalendar files, which have the .ics file extension.\n" +
+                  "Please choose a different file.");
+            $('#uploadForm').trigger('reset'); // resets the entire uploading process
+        }
+    });
+
+    // Event listener for the 'Upload' button for uploading files
+    $('#uploadButton').click(function(e) {
+        // Submitting an HTML form has a default action of redirecting to another page.
+        // This statement overrides that lets us make an AJAX request and do other things
+        // if we want.
+        e.preventDefault();
+
+        // AJAX request
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            data: new FormData($('#uploadForm')[0]),
+            cache: false,
+            contentType: false,
+            processData: false,
+            xhr: function() {
+                var myXhr = $.ajaxSettings.xhr();
+                return myXhr;
+            },
+            success: function() {
+                addText('statusText', 'Successfully uploaded file');
+            },
+            fail: function(error) {
+                addText('statusText', 'Encountered error when attempting to upload file: ' + error);
+            }
+        });
+    });
 });
-
-// Clears the text of an element
-function clearText(id) {
-    $('#' + id).val("");
-}
-
-// Adds text to a textarea
-function addText(textarea, message) {
-    var currentText = textarea.val();
-    if (currentText === "") {
-        textarea.val(message);
-    } else {
-        textarea.val(currentText + "\n" + message);
-    }
-}

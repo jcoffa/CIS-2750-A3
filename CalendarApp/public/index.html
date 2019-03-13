@@ -72,7 +72,7 @@
         <div align="center" style="overflow-y:auto">
             <textarea id="statusText" cols="100" rows="3" name="Status Panel" placeHolder="Status Panel" readonly="readonly"></textarea>
             <button type="button" onclick="clearText('statusText');">Clear</button>
-            <!--<button type="button" onclick="addText($('#statusText'), 'new text');">Clear</button>-->
+            <!--<button type="button" onclick="addText('statusText', 'new text');">Clear</button>-->
         </div>
 
         <!-- File Log Panel -->
@@ -110,7 +110,10 @@
             </table>
 
             <div>
-                Upload File: <input id="uploadFile" name="uploadFile" type="file" style="margin-top: 15px"></input>
+                <form enctype="multipart/form-data" id="uploadForm">
+                    File to Upload: <input id="uploadFile" name="uploadFile" type="file" style="margin-top: 15px"></input>
+                    <button id="uploadButton">Upload</button>
+                </form>
             </div>
         </div>
 
