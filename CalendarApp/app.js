@@ -52,7 +52,11 @@ app.post('/upload', function(req, res) {
       return res.status(500).send(err);
     }
 
-    res.redirect('/');
+    // XXX I added this next res.send() thing, and commented out the res.redirect part
+    res.send({
+        name: uploadFile.name
+    });
+    //res.redirect('/');
   });
 });
 

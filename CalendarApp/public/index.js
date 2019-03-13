@@ -86,15 +86,17 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false,
+            dataType: "json",
+            // Simply putting xhr: $.ajaxSettings.xhr() does not work, so I have to do this function nonsense
             xhr: function() {
                 var myXhr = $.ajaxSettings.xhr();
                 return myXhr;
             },
-            success: function() {
-                addText('statusText', 'Successfully uploaded file');
+            success: function(fileJSON) {
+                addText('statusText', 'Successfully uploaded file "' + fileJSON.name + '"');
             },
             fail: function(error) {
-                addText('statusText', 'Encountered error when attempting to upload file: ' + error);
+                addText('statusText', 'Encountered error when attempting to upload a file: ' + error);
             }
         });
     });
