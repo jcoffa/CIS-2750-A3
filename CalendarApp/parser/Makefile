@@ -65,11 +65,25 @@ libdebug.so: Debug.o
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -fpic $< -o $(OUT)/$@
 
+libajaxstub.so: AJAXstub.o
+	$(CC) -shared $(OUT)/AJAXstub.o -o ../libajaxstub.so
+
+AJAX: ajaxmain.c libajaxstub.so
+	$(CC) $(CFLAGS) -L.. -lajaxstub ajaxmain.c -o AJAX
+
 #############
 # Utilities #
 #############
 
+runajax:
+	$(MAKE) AJAX
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./AJAX
+
+runajaxmem:
+	$(MAKE) AJAX
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./AJAX
+
 # removes all .o and .so files
 clean:
-	rm -f -r $(OUT)/*.o $(OUT)/*.so
+	rm -f -r $(OUT)/*.o $(OUT)/*.so AJAX ../libajaxstub.so
 

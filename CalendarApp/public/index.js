@@ -7,10 +7,19 @@ function clearText(id) {
 function addText(id, message) {
     var textarea = $('#' + id)
     var currentText = textarea.val();
+
+    // Determine how text should be appended (note: .append() method from jquery doesn't work for this)
+    // https://stackoverflow.com/a/4723017
     if (currentText === "") {
         textarea.val(message);
     } else {
+        // Append text
         textarea.val(currentText + "\n" + message);
+
+        // Scroll to the bottom
+        var height1 = textarea[0].scrollHeight;
+        var height2 = textarea.height();
+        textarea.scrollTop(height1 - height2);
     }
 }
 
@@ -86,17 +95,91 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false,
-            dataType: "json",
             // Simply putting xhr: $.ajaxSettings.xhr() does not work, so I have to do this function nonsense
             xhr: function() {
-                var myXhr = $.ajaxSettings.xhr();
-                return myXhr;
+                return $.ajaxSettings.xhr();
             },
             success: function(fileJSON) {
                 addText('statusText', 'Successfully uploaded file "' + fileJSON.name + '"');
             },
             fail: function(error) {
                 addText('statusText', 'Encountered error when attempting to upload a file: ' + error);
+            }
+        });
+    });
+
+
+    /*******************************************
+     * AJAX Callbacks for Calendar data JSON's *
+     *******************************************/
+
+    // AJAX Stub : Fake DateTime
+    $('#fakeDTbutton').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            url: '/getFakeDT',
+            success: function(data) {
+                addText('statusText', 'Received DT-string: ' + JSON.stringify(data));
+            },
+            fail: function(error) {
+                console.log(error);
+            }
+        });
+    });
+
+    // AJAX Stub : Fake Event
+    $('#showPropertiesButton').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: 'get',            //Request type
+            dataType: 'json',       //Data type - we will use JSON for almost everything 
+            url: '/getFakeEvent',   //The server endpoint we are connecting to
+            success: function (data) {
+                addText('statusText', 'Received event-string "' + JSON.stringify(data) + '"');
+                //We write the object to the console to show that the request was successful
+                console.log(data); 
+            },
+            fail: function(error) {
+                // Non-200 return, do something with error
+                console.log(error); 
+            }
+        });
+    });
+
+    // AJAX Stub : Fake Alarm
+    $('#showAlarmsButton').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            url: '/getFakeAlarm',
+            success: function(data) {
+                addText('statusText', 'Received alarm-string: ' + JSON.stringify(data));
+            },
+            fail: function(error) {
+                console.log(error);
+            }
+        });
+    });
+
+    // AJAX Stub : Fake Calendar
+    $('#fakeCalButton').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            url: '/getFakeCal',
+            success: function(data) {
+                addText('statusText', 'Received Cal-string: ' + JSON.stringify(data));
+            },
+            fail: function(error) {
+                console.log(error);
             }
         });
     });

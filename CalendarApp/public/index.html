@@ -81,6 +81,8 @@
         <hr>
         <div align="center" style="overflow:auto">
             <!-- Calendar file table -->
+            <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
+                 Add and remove rows in a table programatically-->
             <table>
                 <thead>
                     <tr>
@@ -92,20 +94,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>This</td>
-                        <td>is</td>
-                        <td>another</td>
-                        <td>row,</td>
-                        <td>see?</td>
-                    </tr>
-                    <tr>
-                        <td>And</td>
-                        <td>yet</td>
-                        <td>another</td>
-                        <td>row</td>
-                        <td>appears!</td>
-                    </tr>
                 </tbody>
             </table>
 
@@ -123,12 +111,7 @@
             <!-- Drop-down menu to select which file to view -->
             <div>
                 <label for="fileSelector">Calendar File to View:</label>
-                <select id="fileSelector" style="margin-left:10px;max-width:30em">
-                    <option value="test1">file1.ics</toption>
-                    <option value="test2">file2.ics</toption>
-                    <option value="test3">file3.ics</toption>
-                    <option value="test4">thisIsAVeryLongFileNameForACalendarFileThatIsSuperDuperrDuperLong.ics</option>
-                </select>
+                <select id="fileSelector" style="margin-left:10px;max-width:30em"></select>
                 <button id="addEventButton">Add Event To This Calendar</button>
                 <button id="createCalendarButton">Create New Calendar</button>
             </div>
@@ -137,6 +120,8 @@
         </div>
 
         <!-- Table to view the events/information of the file -->
+        <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
+             Add and remove rows in a table programatically-->
         <div align="center" style="overflow:auto;padding:20px">
             <table>
                 <thead>
@@ -150,14 +135,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>20190306</td>
-                        <td>1200000</td>
-                        <td>This is an example summary</td>
-                        <td>2</td>
-                        <td>1</td>
-                    </tr>
                 </tbody>
             </table>
         </div>
@@ -165,9 +142,11 @@
         <div class="clearfix">
             <div>
                 <form id="eventNo">
-                <button type="button" style="float:left">Show Alarms For Event No.</button>
-                <button type="button" style="float:left">Show Properties For Event No.</button>
+                    <button type="button" id="showAlarmsButton" style="float:left">Show Alarms For Event No. (AJAX stub Alarm)</button>
+                    <button type="button" id="showPropertiesButton" style="float:left">Show Properties For Event No. (AJAX stub Event)</button>
                     <input type="number" min="1" placeholder="Event No." style="float:left">
+                    <button type="button" id="fakeDTbutton" style="float:left">(AJAX stub DateTime)</button>
+                    <button type="button" id="fakeCalButton" style="float:left">(AJAX stub Calendar)</button>
                 </form>
             </div>
         </div>

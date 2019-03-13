@@ -74,6 +74,41 @@ app.get('/uploads/:name', function(req , res){
 
 //******************** Your code goes here ******************** 
 
+
+// Real callbacks getting fake data from a C shared library using ffi
+let lib = ffi.Library('./libajaxstub', {
+    'fakeDT': ['string', []],
+    'fakeAlarm': ['string', []],
+    'fakeEvent': ['string', []],
+    'fakeCal': ['string', []],
+});
+
+app.get('/getFakeDT', function(req, res) {
+    var tempStr = lib.fakeDT();
+    console.log('Got the following fake DateTime from C: ' + tempStr);
+    res.send(tempStr);
+});
+
+app.get('/getFakeAlarm', function(req, res) {
+    var tempStr = lib.fakeAlarm();
+    console.log('Got the following fake alarm from C: ' + tempStr);
+    res.send(tempStr);
+});
+
+app.get('/getFakeEvent', function(req, res) {
+    var tempStr = lib.fakeEvent();
+    console.log('Got the following fake event from C: ' + tempStr);
+    var parsed = JSON.parse(tempStr);
+    console.log('After parsing: ' + parsed);
+    res.send(parsed);
+});
+
+app.get('/getFakeCal', function(req, res) {
+    var tempStr = lib.fakeCal();
+    console.log('Got the following fake calendar from C: ' + tempStr);
+    res.send(tempStr);
+});
+
 //Sample endpoint
 app.get('/someendpoint', function(req , res){
   res.send({
