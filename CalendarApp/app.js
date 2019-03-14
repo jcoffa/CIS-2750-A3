@@ -53,9 +53,12 @@ app.post('/upload', function(req, res) {
     }
 
     // XXX I added this next res.send() thing, and commented out the res.redirect part
+    /*
     res.send({
         name: uploadFile.name
     });
+    */
+    res.send(uploadFile);
     //res.redirect('/');
   });
 });
@@ -76,7 +79,7 @@ app.get('/uploads/:name', function(req , res){
 
 
 // Real callbacks getting fake data from a C shared library using ffi
-let lib = ffi.Library('./libajaxstub', {
+let fakelib = ffi.Library('./libajaxstub', {
     'fakeDT': ['string', []],
     'fakeAlarm': ['string', []],
     'fakeEvent': ['string', []],
@@ -84,19 +87,19 @@ let lib = ffi.Library('./libajaxstub', {
 });
 
 app.get('/getFakeDT', function(req, res) {
-    var tempStr = lib.fakeDT();
+    var tempStr = fakelib.fakeDT();
     console.log('Got the following fake DateTime from C: ' + tempStr);
     res.send(tempStr);
 });
 
 app.get('/getFakeAlarm', function(req, res) {
-    var tempStr = lib.fakeAlarm();
+    var tempStr = fakelib.fakeAlarm();
     console.log('Got the following fake alarm from C: ' + tempStr);
     res.send(tempStr);
 });
 
 app.get('/getFakeEvent', function(req, res) {
-    var tempStr = lib.fakeEvent();
+    var tempStr = fakelib.fakeEvent();
     console.log('Got the following fake event from C: ' + tempStr);
     var parsed = JSON.parse(tempStr);
     console.log('After parsing: ' + parsed);
@@ -104,10 +107,22 @@ app.get('/getFakeEvent', function(req, res) {
 });
 
 app.get('/getFakeCal', function(req, res) {
-    var tempStr = lib.fakeCal();
+    var tempStr = fakelib.fakeCal();
     console.log('Got the following fake calendar from C: ' + tempStr);
     res.send(tempStr);
 });
+
+// Real callbacks getting real data from a C shared library using ffi
+/*
+let calparser = ffi.Library('./libcalendar', {
+    'createCalFileFromJSON': ['string', ['string', 'string', 'string', 'string', 'string']],
+});
+
+app.get('/writeCalendar', function (req, res) {
+    var calStr = calparser.createCalFileFromJSON(req.cal, req.evt, req.startDT, req.createDT, req.file);
+    res.send(JSON.parse(calStr));
+});
+*/
 
 //Sample endpoint
 app.get('/someendpoint', function(req , res){
