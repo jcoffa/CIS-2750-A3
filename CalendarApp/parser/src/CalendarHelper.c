@@ -11,6 +11,15 @@
 #include "Debug.h"
 #include "Parsing.h"
 
+const char *calPropNames[NUM_CALPROPNAMES] = {"CALSCALE", "METHOD", "PRODID", "VERSION"};
+
+const char *eventPropNames[NUM_EVENTPROPNAMES] = {"ATTACH", "ATTENDEE", "CATEGORIES", "CLASS", "COMMENT", \
+    "CONTACT", "CREATED", "DESCRIPTION", "DTEND", "DTSTAMP", "DTSTART", "DURATION", "EXDATE", \
+    "GEO", "LAST-MODIFIED", "LOCATION", "ORGANIZER", "PRIORITY", "RDATE", "RECURRENCE-ID", "RELATED-TO", \
+    "RESOURCES", "RRULE", "SEQUENCE", "STATUS", "SUMMARY", "TRANSP", "UID", "URL"};
+
+const char *alarmPropNames[NUM_ALARMPROPNAMES] = {"ACTION", "ATTACH", "DURATION", "REPEAT", "TRIGGER"};
+
 /* Writes the property list 'props' to the file pointed to by 'fout' in the proper
  * iCalendar syntax.
  */

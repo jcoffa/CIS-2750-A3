@@ -26,16 +26,13 @@
  **********************/
 
 #define NUM_CALPROPNAMES 4
-const char *calPropNames[NUM_CALPROPNAMES] = {"CALSCALE", "METHOD", "PRODID", "VERSION"};
+extern const char *calPropNames[NUM_CALPROPNAMES];
 
 #define NUM_EVENTPROPNAMES 29
-const char *eventPropNames[NUM_EVENTPROPNAMES] = {"ATTACH", "ATTENDEE", "CATEGORIES", "CLASS", "COMMENT", \
-	"CONTACT", "CREATED", "DESCRIPTION", "DTEND", "DTSTAMP", "DTSTART", "DURATION", "EXDATE", \
-	"GEO", "LAST-MODIFIED", "LOCATION", "ORGANIZER", "PRIORITY", "RDATE", "RECURRENCE-ID", "RELATED-TO", \
-	"RESOURCES", "RRULE", "SEQUENCE", "STATUS", "SUMMARY", "TRANSP", "UID", "URL"};
+extern const char *eventPropNames[NUM_EVENTPROPNAMES];
 
 #define NUM_ALARMPROPNAMES 5
-const char *alarmPropNames[NUM_ALARMPROPNAMES] = {"ACTION", "ATTACH", "DURATION", "REPEAT", "TRIGGER"};
+extern const char *alarmPropNames[NUM_ALARMPROPNAMES];
 
 /***********************
  * Function Signatures *

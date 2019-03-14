@@ -13,6 +13,7 @@
 
 # files
 LIBS = CalendarParser.h LinkedListAPI.h Parsing.h Initialize.h CalendarHelper.h Debug.h
+OBJS := $(LIBS:.h=.o)
 SHARED = list cal parsing init calhelp debug
 
 # update VPATH to search directories for files specified in rule preqrequisites
@@ -54,6 +55,10 @@ libcalhelp.so: CalendarHelper.o
 
 libdebug.so: Debug.o
 	$(CC) -shared $(OUT)/Debug.o -o $(OUT)/libdebug.so
+
+# Unified library
+libcalendar.so: $(OBJS)
+	$(CC) -shared $(addprefix $(OUT)/,$(OBJS)) -o ../$@
 
 # % = pattern match to any string (it stays consistent, so using it in multiple places
 #     will use the same string)
