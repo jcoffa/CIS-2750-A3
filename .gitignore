@@ -6,4 +6,4 @@ package*.json
 CalendarApp/uploads/*
 CalendarApp/parser/AJAX
 CalendarApp/parser/bin/
-CalendarApp/libajaxstub.so
+*.so
