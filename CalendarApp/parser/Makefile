@@ -12,7 +12,7 @@
 #############
 
 # files
-LIBS = CalendarParser.h LinkedListAPI.h Parsing.h Initialize.h CalendarHelper.h Debug.h
+LIBS = CalendarParser.h LinkedListAPI.h Parsing.h Initialize.h CalendarHelper.h Debug.h ffiCalendar.h
 OBJS := $(LIBS:.h=.o)
 SHARED = list cal parsing init calhelp debug
 
@@ -32,7 +32,8 @@ LDFLAGS := -L. -L$(OUT) $(addprefix -l,$(SHARED))
 # Make Rules #
 ##############
 
-all: list parser libparsing.so libinit.so libcalhelp.so libdebug.so
+all: libcalendar.so
+#all: list parser libparsing.so libinit.so libcalhelp.so libdebug.so
 
 list: liblist.so
 
