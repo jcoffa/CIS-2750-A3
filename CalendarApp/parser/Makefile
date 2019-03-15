@@ -33,29 +33,30 @@ LDFLAGS := -L. -L$(OUT) $(addprefix -l,$(SHARED))
 ##############
 
 all: libcalendar.so
+
 #all: list parser libparsing.so libinit.so libcalhelp.so libdebug.so
-
-list: liblist.so
-
-parser: libcal.so
-	
-liblist.so: LinkedListAPI.o
-	$(CC) -shared $(OUT)/LinkedListAPI.o -o $(OUT)/liblist.so
-
-libcal.so: CalendarParser.o
-	$(CC) -shared $(OUT)/CalendarParser.o -o $(OUT)/libcal.so
-
-libparsing.so: Parsing.o
-	$(CC) -shared $(OUT)/Parsing.o -o $(OUT)/libparsing.so
-
-libinit.so: Initialize.o
-	$(CC) -shared $(OUT)/Initialize.o -o $(OUT)/libinit.so
-
-libcalhelp.so: CalendarHelper.o
-	$(CC) -shared $(OUT)/CalendarHelper.o -o $(OUT)/libcalhelp.so
-
-libdebug.so: Debug.o
-	$(CC) -shared $(OUT)/Debug.o -o $(OUT)/libdebug.so
+#
+#list: liblist.so
+#
+#parser: libcal.so
+#
+#liblist.so: LinkedListAPI.o
+#	$(CC) -shared $(OUT)/LinkedListAPI.o -o $(OUT)/liblist.so
+#
+#libcal.so: CalendarParser.o
+#	$(CC) -shared $(OUT)/CalendarParser.o -o $(OUT)/libcal.so
+#
+#libparsing.so: Parsing.o
+#	$(CC) -shared $(OUT)/Parsing.o -o $(OUT)/libparsing.so
+#
+#libinit.so: Initialize.o
+#	$(CC) -shared $(OUT)/Initialize.o -o $(OUT)/libinit.so
+#
+#libcalhelp.so: CalendarHelper.o
+#	$(CC) -shared $(OUT)/CalendarHelper.o -o $(OUT)/libcalhelp.so
+#
+#libdebug.so: Debug.o
+#	$(CC) -shared $(OUT)/Debug.o -o $(OUT)/libdebug.so
 
 # Unified library
 libcalendar.so: $(OBJS)
@@ -71,11 +72,8 @@ libcalendar.so: $(OBJS)
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -fpic $< -o $(OUT)/$@
 
-libajaxstub.so: AJAXstub.o
-	$(CC) -shared $(OUT)/AJAXstub.o -o ../libajaxstub.so
-
-AJAX: ajaxmain.c libajaxstub.so
-	$(CC) $(CFLAGS) -L.. -lajaxstub ajaxmain.c -o AJAX
+AJAX: ajaxmain.c libcalendar.so
+	$(CC) $(CFLAGS) -L.. -lcalendar ajaxmain.c -o AJAX
 
 #############
 # Utilities #

@@ -79,7 +79,7 @@ app.get('/uploads/:name', function(req , res){
 
 
 // Real callbacks getting fake data from a C shared library using ffi
-let fakelib = ffi.Library('./libajaxstub', {
+let lib = ffi.Library('./libcalendar', {
     'fakeDT': ['string', []],
     'fakeAlarm': ['string', []],
     'fakeEvent': ['string', []],
@@ -87,37 +87,33 @@ let fakelib = ffi.Library('./libajaxstub', {
 });
 
 app.get('/getFakeDT', function(req, res) {
-    var tempStr = fakelib.fakeDT();
-    console.log('Got the following fake DateTime from C: ' + tempStr);
+    var tempStr = lib.fakeDT();
+    console.log('Got the following fake DateTime from C: "' + tempStr + '"');
     res.send(tempStr);
 });
 
 app.get('/getFakeAlarm', function(req, res) {
-    var tempStr = fakelib.fakeAlarm();
-    console.log('Got the following fake alarm from C: ' + tempStr);
+    var tempStr = lib.fakeAlarm();
+    console.log('Got the following fake alarm from C: "' + tempStr + '"');
     res.send(tempStr);
 });
 
 app.get('/getFakeEvent', function(req, res) {
-    var tempStr = fakelib.fakeEvent();
-    console.log('Got the following fake event from C: ' + tempStr);
+    var tempStr = lib.fakeEvent();
+    console.log('Got the following fake event from C: "' + tempStr + '"');
     var parsed = JSON.parse(tempStr);
     console.log('After parsing: ' + parsed);
     res.send(parsed);
 });
 
 app.get('/getFakeCal', function(req, res) {
-    var tempStr = fakelib.fakeCal();
-    console.log('Got the following fake calendar from C: ' + tempStr);
+    var tempStr = lib.fakeCal();
+    console.log('Got the following fake calendar from C: "' + tempStr + '"');
     res.send(tempStr);
 });
 
 // Real callbacks getting real data from a C shared library using ffi
 /*
-let calparser = ffi.Library('./libcalendar', {
-    'createCalFileFromJSON': ['string', ['string', 'string', 'string', 'string', 'string']],
-});
-
 app.get('/writeCalendar', function (req, res) {
     var calStr = calparser.createCalFileFromJSON(req.cal, req.evt, req.startDT, req.createDT, req.file);
     res.send(JSON.parse(calStr));

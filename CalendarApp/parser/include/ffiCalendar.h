@@ -13,7 +13,19 @@
 #ifndef FFICALENDAR_H
 #define FFICALENDAR_H
 
+#include <time.h>
+
 #include "CalendarParser.h"
+
+char *fakeText(bool spaces, int numWords);
+
+char *fakeDT();
+
+char *fakeAlarm();
+
+char *fakeEvent();
+
+char *fakeCal();
 
 // Takes a filename and returns a JSON string of a Calendar object, or an error code on a fail.
 char *createCalendarWrapper(const char filename[]);
