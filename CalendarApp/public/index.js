@@ -23,8 +23,45 @@ function addText(id, message) {
     }
 }
 
+function formatDate(dt) {
+    var toReturn = "";
+
+    toReturn += dt.date.slice(0, 4);
+    toReturn += '/';
+    toReturn += dt.date.slice(4, 6);
+    toReturn += '/';
+    toReturn += dt.date.slice(6);
+
+    return toReturn;
+}
+
+function formatTime(dt) {
+    var toReturn = "";
+
+    toReturn += dt.time.slice(0, 2);
+    toReturn += ':';
+    toReturn += dt.time.slice(2, 4);
+    toReturn += ':';
+    toReturn += dt.time.slice(4);
+
+    if (dt.isUTC) {
+        toReturn += ' (UTC)';
+    }
+
+    return toReturn;
+}
+
+// Adds a new row to the Event List table, given an Event object retrieved from a JSON
+function addEventToTable(evt) {
+    var markup = "<tr><td><input type='radio' name='eventSelect'></td><td>" + formatDate(evt.startDT) + "</td><td>"
+                 + formatTime(evt.startDT) + "</td><td>" + evt.summary + "</td><td>" + evt.numProps + "</td><td>"
+                 + evt.numAlarms + "</td></tr>";
+
+    $('#eventTable').append(markup);
+}
+
 // Put all onload AJAX calls here, and event listeners
-$(document).ready(function() {
+$(document).ready(function() { 
     // Event handler for modal Add Event
     $('#addEventButton').click(function() {
         $('#addEventModal').css("display", "block");
@@ -78,7 +115,27 @@ $(document).ready(function() {
             },
             success: function(file) {
                 addText('statusText', 'Successfully uploaded file "' + file.name + '"');
-                // TODO add file to file log panel
+
+                // Add the newly uploaded file to the File Log Panel after getting its JSON,
+                // and to the Calendar File list to see its Events (and be able to add an Event to it)
+                $.ajax({
+                    type: 'get',
+                    dataType: 'json',
+                    url: '/getFakeCal',  // TODO replace with the real "get calendar JSON" endpoint
+                    success: function(calendar) {
+                        // Add calendar to the File Log Panel
+                        var markup = "<tr><td><a href='/uploads/" + file.name + "'>" + file.name + "</a></td><td>"
+                                     + calendar.version + "</td><td>" + calendar.prodID + "</td><td>"
+                                     + calendar.numEvents + "</td><td>" + calendar.numProps + "</td></tr>";
+                        $('#fileLogBody').append(markup);
+
+                        // Add calendar to the Calendar File List
+                        $('#fileSelector').append($('<option></option>').attr('value', file.name).text(file.name));
+                    },
+                    fail: function(error) {
+                        addText('statusText', 'Encountered error when retrieving Calendar JSON: ' + error);
+                    }
+                });
             },
             fail: function(error) {
                 addText('statusText', 'Encountered error when attempting to upload a file: ' + error);
@@ -100,7 +157,7 @@ $(document).ready(function() {
             dataType: 'json',
             url: '/getFakeDT',
             success: function(data) {
-                addText('statusText', 'Received DT-string: ' + JSON.stringify(data));
+                addText('statusText', 'Received DT-string JSON: ' + JSON.stringify(data));
             },
             fail: function(error) {
                 console.log(error);
@@ -117,9 +174,11 @@ $(document).ready(function() {
             dataType: 'json',       //Data type - we will use JSON for almost everything 
             url: '/getFakeEvent',   //The server endpoint we are connecting to
             success: function (data) {
-                addText('statusText', 'Received event-string "' + JSON.stringify(data) + '"');
+                addText('statusText', 'Received event-string JSON: "' + JSON.stringify(data) + '"');
                 //We write the object to the console to show that the request was successful
-                console.log(data); 
+                console.log(data);
+
+                addEventToTable(data);
             },
             fail: function(error) {
                 // Non-200 return, do something with error
@@ -137,7 +196,7 @@ $(document).ready(function() {
             dataType: 'json',
             url: '/getFakeAlarm',
             success: function(data) {
-                addText('statusText', 'Received alarm-string: ' + JSON.stringify(data));
+                addText('statusText', 'Received alarm-string JSON: ' + JSON.stringify(data));
             },
             fail: function(error) {
                 console.log(error);
@@ -154,7 +213,7 @@ $(document).ready(function() {
             dataType: 'json',
             url: '/getFakeCal',
             success: function(data) {
-                addText('statusText', 'Received Cal-string: ' + JSON.stringify(data));
+                addText('statusText', 'Received Cal-string JSON: ' + JSON.stringify(data));
             },
             fail: function(error) {
                 console.log(error);

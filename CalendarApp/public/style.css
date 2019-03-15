@@ -67,7 +67,12 @@ thead {
     background-color: #c0c0c0;
 }
 
-/* Textareas cant be resized */
+/* Custom table class that supports a 'maximum rows displayed' sort of feature */
+.maxRowTable {
+    overflow-y: auto;
+}
+
+/* Textareas can't be resized */
 textarea {
     resize: none;
     overflow:auto;
@@ -100,6 +105,9 @@ hr {
     border: 3px outset #CFCFFF;
 }
 
+/***************
+ * Modal Stuff *
+ ***************/
 .modal {
     display: none;
     position: fixed;

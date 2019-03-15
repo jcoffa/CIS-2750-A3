@@ -39,32 +39,6 @@
     <!-- The body is where the actual meat of the website is written. You can add all the <div> elements, which are like
          blank panels in Java where you can put stuff in. -->
     <body>
-<!-- # A link for verifying that file download functionality works -->
-        <!--
-        <h3>Download test</h3>
-        If the A3 stub is running and testCalSimpleUTC.ics exists in the uploads/ directory on the server, then clicking on the link below will download it from the server.<br>
-        <a href="/uploads/testCalSimpleUTC.ics">testCalSimpleUTC.ics</a>
-        <hr>
-        -->
-
-        <!-- Everything below this line and above the 'src="/index.js"' part is not in the .pdf file mentioned at the top of the file.
-             It creates a couple of static HTML elements that you can view in the browser. -->
-
-        <!--
-        <div id="blah">I am blah</div>
-        <hr>
-        <form ref='someform'
-              id='someform'>
-            <div class="form-group">
-                <label for="entryBox">Last Name</label>
-                <input type="text" class="form-control" id="entryBox" value="Value" placeholder="Placeholder">
-            </div>
-            <div class="form-group">
-                <input type='submit' class="btn btn-secondary">
-            </div>
-        </form>
-        -->
-
         <h1>iCalendar File Manager</h1>
         <hr>
 
@@ -83,7 +57,7 @@
             <!-- Calendar file table -->
             <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
                  Add and remove rows in a table programatically-->
-            <table>
+            <table id="fileLogTable" class="maxRowTable">
                 <thead>
                     <tr>
                         <th width="20%">File Name<br>(click to download)</th>
@@ -93,13 +67,13 @@
                         <th># Properties</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="fileLogBody">
                 </tbody>
             </table>
 
             <div>
                 <form enctype="multipart/form-data" id="uploadForm">
-                    File to Upload: <input id="uploadFile" name="uploadFile" type="file" style="margin-top: 15px"></input>
+                    File to Upload: <input id="uploadFile" name="uploadFile" type="file" accept=".ics" style="margin-top: 15px"></input>
                     <button id="uploadButton">Upload</button>
                 </form>
             </div>
@@ -109,9 +83,9 @@
         <hr>
         <div class="clearfix">
             <!-- Drop-down menu to select which file to view -->
-            <div>
+            <div align="center">
                 <label for="fileSelector">Calendar File to View:</label>
-                <select id="fileSelector" style="margin-left:10px;max-width:30em"></select>
+                <select id="fileSelector" style="margin-left:10px;width:30em"></select>
                 <button id="addEventButton">Add Event To This Calendar</button>
                 <button id="createCalendarButton">Create New Calendar</button>
             </div>
@@ -121,20 +95,21 @@
 
         <!-- Table to view the events/information of the file -->
         <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
-             Add and remove rows in a table programatically-->
+             Add and remove rows in a table programatically -->
         <div align="center" style="overflow:auto;padding:20px">
-            <table>
+            <table id="eventTable" class="maxRowTable">
                 <thead>
                     <tr>
-                        <th>Event No.</th>
-                        <th>Start Date</th>
-                        <th>Start Time</th>
-                        <th width="50%">Summary</th>
+                        <th>Select</th>
+                        <!--<th>Event No.</th>-->
+                        <th width="15%">Start Date<br>YYYY/MM/DD</th>
+                        <th width="15%">Start Time<br>HH:MM:SS</th>
+                        <th width="45%">Summary</th>
                         <th># Properties</th>
                         <th># Alarms</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="eventBody">
                 </tbody>
             </table>
         </div>
@@ -142,16 +117,18 @@
         <div class="clearfix">
             <div>
                 <form id="eventNo">
-                    <button type="button" id="showAlarmsButton" style="float:left">Show Alarms For Event No. (AJAX stub Alarm)</button>
-                    <button type="button" id="showPropertiesButton" style="float:left">Show Properties For Event No. (AJAX stub Event)</button>
-                    <input type="number" min="1" placeholder="Event No." style="float:left">
-                    <button type="button" id="fakeDTbutton" style="float:left">(AJAX stub DateTime)</button>
-                    <button type="button" id="fakeCalButton" style="float:left">(AJAX stub Calendar)</button>
+                    <button type="button" id="showAlarmsButton" style="float:left">Show Alarms For Event (AJAX stub Alarm JSON)</button>
+                    <button type="button" id="showPropertiesButton" style="float:left">Show Properties For Event (AJAX stub Event JSON)</button>
+                    <!--<input type="number" min="1" placeholder="Event No." style="float:left">-->
+                    <button type="button" id="fakeDTbutton" style="float:left">(AJAX stub DateTime JSON)</button>
+                    <button type="button" id="fakeCalButton" style="float:left">(AJAX stub Calendar JSON)</button>
                 </form>
             </div>
         </div>
 
         <!-- Modals: https://www.w3schools.com/howto/howto_css_modals.asp -->
+
+        <!-- 'Add Event to Current Calendar' Modal -->
         <div id="addEventModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -167,6 +144,7 @@
             </div>
         </div>
 
+        <!-- 'Create a Brand New Calendar' Modal -->
         <div id="createCalendarModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -175,7 +153,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="calendarForm">
-                        File Name: <input typ="text" name="calFileName"></input>
+                        File Name: <input type="text" name="calFileName"></input>
                     </form>
                 </div>
             </div>
