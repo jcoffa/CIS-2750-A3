@@ -44,7 +44,7 @@
 
         <!-- Status panel -->
         <div align="center" style="overflow-y:auto">
-            <textarea id="statusText" cols="100" rows="3" name="Status Panel" placeHolder="Status Panel" readonly="readonly"></textarea>
+            <textarea id="statusText" cols="100" rows="4" name="Status Panel" placeHolder="Status Panel" readonly="readonly"></textarea>
             <button type="button" onclick="clearText('statusText');">Clear</button>
             <!--<button type="button" onclick="addText('statusText', 'new text');">Clear</button>-->
         </div>
@@ -53,7 +53,7 @@
 
         <!-- Download file: https://www.w3schools.com/howto/howto_html_download_link.asp -->
         <hr>
-        <div align="center" style="overflow:auto">
+        <div align="center"class="scrollTableDiv">
             <!-- Calendar file table -->
             <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
                  Add and remove rows in a table programatically-->
@@ -63,20 +63,20 @@
                         <th width="20%">File Name<br>(click to download)</th>
                         <th>Version</th>
                         <th width="60%">Product ID</th>
-                        <th># Events</th>
-                        <th># Properties</th>
+                        <th>Events</th>
+                        <th>Properties</th>
                     </tr>
                 </thead>
                 <tbody id="fileLogBody">
                 </tbody>
             </table>
+        </div>
 
-            <div>
-                <form enctype="multipart/form-data" id="uploadForm">
-                    File to Upload: <input id="uploadFile" name="uploadFile" type="file" accept=".ics" style="margin-top: 15px"></input>
-                    <button id="uploadButton">Upload</button>
-                </form>
-            </div>
+        <div align="center">
+            <form enctype="multipart/form-data" id="uploadForm">
+                File to Upload: <input id="uploadFile" name="uploadFile" type="file" accept=".ics" style="margin-top: 15px"></input>
+                <button id="uploadButton">Upload</button>
+            </form>
         </div>
 
         <!-- Calendar View Panel -->
@@ -96,8 +96,8 @@
         <!-- Table to view the events/information of the file -->
         <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
              Add and remove rows in a table programatically -->
-        <div align="center" style="overflow:auto;padding:20px">
-            <table id="eventTable" class="maxRowTable">
+        <div align="center" class="scrollTableDiv">
+            <table id="eventTable">
                 <thead>
                     <tr>
                         <th>Select</th>
@@ -105,8 +105,8 @@
                         <th width="15%">Start Date<br>YYYY/MM/DD</th>
                         <th width="15%">Start Time<br>HH:MM:SS</th>
                         <th width="45%">Summary</th>
-                        <th># Properties</th>
-                        <th># Alarms</th>
+                        <th>Properties</th>
+                        <th>Alarms</th>
                     </tr>
                 </thead>
                 <tbody id="eventBody">
@@ -126,7 +126,11 @@
             </div>
         </div>
 
-        <!-- Modals: https://www.w3schools.com/howto/howto_css_modals.asp -->
+
+
+
+        <!-- MODALS -->
+        <!-- HOWTO: https://www.w3schools.com/howto/howto_css_modals.asp -->
 
         <!-- 'Add Event to Current Calendar' Modal -->
         <div id="addEventModal" class="modal">
@@ -158,6 +162,58 @@
                 </div>
             </div>
         </div>
+
+        <!-- 'View Properties of an Event' Modal -->
+        <div id="viewPropertiesModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Properties</h2>
+                    <span id="closeModalProperties" class="close">X</span>
+                </div>
+                <div class="modal-body">
+                    <div class="scrollTableDivModal">
+                        <table width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Property Name</th>
+                                    <th width="80%">Property Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventPropertyBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="testPropertyTable">Add Random Property</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 'View Alarms in an Event' Modal -->
+        <div id="viewAlarmsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Alarms</h2>
+                    <span id="closeModalAlarms" class="close">X</span>
+                </div>
+                <div class="modal-body">
+                    <div class="scrollTableDivModal">
+                        <table width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Alarm Action</th>
+                                    <th>Alarm Trigger</th>
+                                    <th width="70%">Alarm Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventAlarmBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="testAlarmTable">Add Random Alarm</button>
+                </div>
+            </div>
+        </div>
+
 
 
         <!-- Leave me at the bottom of body -->

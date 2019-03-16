@@ -62,25 +62,42 @@ function addEventToTable(evt) {
 
 // Put all onload AJAX calls here, and event listeners
 $(document).ready(function() { 
-    // Event handler for modal Add Event
+    /***********************************
+     * Open/Close Modal Event Handlers *
+     ***********************************/
+    
+    // Add Event to Calendar
     $('#addEventButton').click(function() {
         $('#addEventModal').css("display", "block");
     });
-
-    // Close modal Add Event
     $('#closeModalEvent').click(function() {
         $('#addEventModal').css("display", "none");
     });
 
-    // Event handler for modal Create Calendar
+    // Create New Calendar
     $('#createCalendarButton').click(function() {
         $('#createCalendarModal').css("display", "block");
     });
-
-    // Close modal Create Calendar
     $('#closeModalCalendar').click(function() {
         $('#createCalendarModal').css("display", "none");
     });
+
+    // Show Alarms For Selected Event
+    $('#showAlarmsButton').click(function() {
+        $('#viewAlarmsModal').css('display', 'block');
+    });
+    $('#closeModalAlarms').click(function() {
+        $('#viewAlarmsModal').css('display', 'none');
+    });
+
+    // Show Properties For Selected Event
+    $('#showPropertiesButton').click(function() {
+        $('#viewPropertiesModal').css('display', 'block');
+    });
+    $('#closeModalProperties').click(function() {
+        $('#viewPropertiesModal').css('display', 'none');
+    });
+
 
     // Event listener for the <input type='file'...> element
     // The function executes after the user hits 'Browse' and selects a file
@@ -143,7 +160,6 @@ $(document).ready(function() {
         });
     });
 
-
     /*******************************************
      * AJAX Callbacks for Calendar data JSON's *
      *******************************************/
@@ -166,6 +182,7 @@ $(document).ready(function() {
     });
 
     // AJAX Stub : Fake Event
+    /*
     $('#showPropertiesButton').click(function(e) {
         e.preventDefault();
 
@@ -186,23 +203,15 @@ $(document).ready(function() {
             }
         });
     });
+    */ 
 
     // AJAX Stub : Fake Alarm
+    /*
     $('#showAlarmsButton').click(function(e) {
         e.preventDefault();
 
-        $.ajax({
-            type: 'get',
-            dataType: 'json',
-            url: '/getFakeAlarm',
-            success: function(data) {
-                addText('statusText', 'Received alarm-string JSON: ' + JSON.stringify(data));
-            },
-            fail: function(error) {
-                console.log(error);
-            }
-        });
-    });
+            });
+    */ 
 
     // AJAX Stub : Fake Calendar
     $('#fakeCalButton').click(function(e) {

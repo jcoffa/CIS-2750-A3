@@ -47,7 +47,7 @@ input[type=submit], button {
 
 /* There are no borders for any table */
 table {
-    border-collapse: collapse;
+    border: 2px solid #404099;
 }
 
 /* Table headers and cells are padded away from the borders, and are cetner aligned */
@@ -67,9 +67,15 @@ thead {
     background-color: #c0c0c0;
 }
 
-/* Custom table class that supports a 'maximum rows displayed' sort of feature */
-.maxRowTable {
-    overflow-y: auto;
+/* Vertically scrolling tables */
+.scrollTableDiv {
+    overflow: auto;
+    height: 210px;
+}
+/* Exactly the same as the normal scrollTableDiv, but bigger */
+.scrollTableDivModal {
+    overflow: auto;
+    height: 500px;
 }
 
 /* Textareas can't be resized */
