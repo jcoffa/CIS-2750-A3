@@ -155,6 +155,12 @@ ICalErrorCode validateCalendar(const Calendar* obj);
  **/
 char* dtToJSON(DateTime prop);
 
+// Converts a Property into a JSON string
+char *propertyToJSON(const Property *prop);
+
+// Converts a Property list into a JSON string
+char *propertyListToJSON(const List *propList);
+
 /** Function to converting an Event into a JSON string
  *@pre Event is not NULL
  *@post Event has not been modified in any way
@@ -171,6 +177,12 @@ char* eventToJSON(const Event* event);
  **/
 char* eventListToJSON(const List* eventList);
 
+// Converts a single Alarm into a JSON string
+char *alarmToJSON(const Alarm *alarm);
+
+// Converts an Alarm list into a JSON string
+char *alarmListToJSON(const List* alarmList);
+
 /** Function to converting a Calendar into a JSON string
  *@pre Calendar is not NULL
  *@post Calendar has not been modified in any way
@@ -179,13 +191,8 @@ char* eventListToJSON(const List* eventList);
  **/
 char* calendarToJSON(const Calendar* cal);
 
-/** Function to converting a JSON string into a Calendar struct
- *@pre JSON string is not NULL
- *@post String has not been modified in any way
- *@return A newly allocated and partially initialized Calendar struct
- *@param str - a pointer to a string
- **/
-Calendar* JSONtoCalendar(const char* str);
+// Converts a JSON string into a Property struct
+Property *JSONtoProperty(const char *str);
 
 /** Function to converting a JSON string into an Event struct
  *@pre JSON string is not NULL
@@ -194,6 +201,17 @@ Calendar* JSONtoCalendar(const char* str);
  *@param str - a pointer to a string
  **/
 Event* JSONtoEvent(const char* str);
+
+// Converts a JSON string into an Alarm struct
+Alarm *JSONtoAlarm(const char *str);
+
+/** Function to converting a JSON string into a Calendar struct
+ *@pre JSON string is not NULL
+ *@post String has not been modified in any way
+ *@return A newly allocated and partially initialized Calendar struct
+ *@param str - a pointer to a string
+ **/
+Calendar* JSONtoCalendar(const char* str);
 
 /** Function to adding an Event struct to an existing Calendar struct
  *@pre arguments are not NULL
