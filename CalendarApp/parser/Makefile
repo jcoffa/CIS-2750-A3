@@ -75,6 +75,9 @@ libcalendar.so: $(OBJS)
 AJAX: ajaxmain.c libcalendar.so
 	$(CC) $(CFLAGS) -L.. -lcalendar ajaxmain.c -o AJAX
 
+JSON: testJSON.c libcalendar.so
+	$(CC) $(CFLAGS) -L.. -lcalendar $< -o JSON
+
 #############
 # Utilities #
 #############
@@ -86,6 +89,11 @@ runajax:
 runajaxmem:
 	$(MAKE) AJAX
 	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./AJAX
+
+runjson:
+	$(MAKE) JSON
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./JSON
+
 
 # removes all .o and .so files
 clean:
