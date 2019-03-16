@@ -9,14 +9,23 @@
 
 #include "ffiCalendar.h"
 
-// It is VERY IMPORTANT to only seed random number generation once, so through the magic
-// of static vairables, this function guarantees to seed the rand() function exactly once.
-void seedrand() {
-    static bool didSeed = false;
+/****************************
+ * Stub AJAX Call Functions *
+ ****************************/
 
-    if (!didSeed) {
+// These functions contribute to returning valid JSON strings for Calendars, Events,
+// Alarms, and DateTimes that contain invalid (random) data. They are to be used
+// only for testing that AJAX calls are functional.
+
+
+// It is VERY IMPORTANT to only seed random number generation once, so through the magic
+// of static variables, this function guarantees to seed the rand() function exactly once.
+void seedrand() {
+    static bool notYetSeeded = true;
+
+    if (notYetSeeded) {
         srand(time(NULL));
-        didSeed = true;
+        notYetSeeded = false;
     }
 }
 
@@ -143,6 +152,5 @@ char *fakeCal() {
     free(fakeProdid);
 
     return realloc(toReturn, written+1);
-
 }
 
