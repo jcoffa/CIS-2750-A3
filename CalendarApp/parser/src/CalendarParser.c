@@ -544,10 +544,17 @@ ICalErrorCode validateCalendar(const Calendar* obj) {
  *@param prop - a DateTime struct
  **/
 char* dtToJSON(DateTime prop) {
+	debugMsg("-----START dtToJSON()-----\n");
+	char *temp = printDate((void *)&prop);
+	debugMsg("\tDT passed: \"%s\"\n", temp);
+	free(temp);
+
 	char *toReturn = malloc(1000);
 
 	int written = snprintf(toReturn, 1000, "{\"date\":\"%s\",\"time\":\"%s\",\"isUTC\":%s}", prop.date, prop.time, \
 	                       (prop.UTC) ? "true" : "false");
+
+	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
 
 	return realloc(toReturn, written + 1);
 }
@@ -559,21 +566,29 @@ char* dtToJSON(DateTime prop) {
  *@param event - a pointer to an Event struct
  **/
 char* eventToJSON(const Event* event) {
+	debugMsg("-----START eventToJSON()-----\n");
 	char *toReturn;
 	int written;
 
 	if (event == NULL) {
 		// In the case where an event is NULL, an empty JSON string is returned
+		notifyMsg("\tEvent passed is NULL, returning \"{}\"\n");
+
 		toReturn = malloc(3);
 		strcpy(toReturn, "{}");
 		written = 2;
 	} else {
+		char *temp = printEvent((void *)event);
+		debugMsg("\tEvent passed: \"%s\"\n", temp);
+		free(temp);
+
 		char *startDT = dtToJSON(event->startDateTime);
 
 		// Create a dummy property to find the "SUMMARY" property in 'event', if it exists
 		Property *dummy = malloc(sizeof(Property));
 		strcpy(dummy->propName, "SUMMARY");
 		Property *summary = findElement(event->properties, propNamesEqual, dummy);
+		free(dummy);
 
 		// Allocate memory depending on whether a SUMMARY property needs to be written
 		int size = (summary == NULL) ? 500 : strlen(summary->propDescr) + 500;
@@ -581,11 +596,16 @@ char* eventToJSON(const Event* event) {
 
 		// Write the JSON in toReturn
 		written = snprintf(toReturn, size, "{\"startDT\":%s,\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\"}", \
-		                   startDT, getLength(event->properties), getLength(event->alarms), \
+		                   startDT, getLength(event->properties)+3, getLength(event->alarms), \
 		                   // findElement returns NULL if the property could not be found in 'event',
 		                   // in which case an empty string is written instead of the summary properties description
 		                   (summary == NULL) ? "" : summary->propDescr);
+
+		// NOTE: +3 is added to the length of the Event's proeprty list because
+		// the required UID and the 2 required DateTimes count as properties
 	}
+
+	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
 
 	return realloc(toReturn, written + 1);
 }
@@ -600,12 +620,19 @@ char* eventListToJSON(const List* eventList) {
 	char *toReturn, *tempEvJSON;
 	int currentLength;
 
+	debugMsg("-----START eventListToJSON()-----\n");
+
 	// Casting a List * into a List * to avoid a warning regarding non-const parameters
 	if (eventList == NULL || getLength((List *)eventList) == 0) {
 		toReturn = malloc(3);
 		strcpy(toReturn, "[]");
+		notifyMsg("\tEvent List empty or NULL, returning \"%s\"\n", toReturn);
 		return toReturn;
 	}
+
+	char *temp = toString((List *)eventList);
+	debugMsg("\tEvent list passed: \"%s\"\n", temp);
+	free(temp);
 
 	// Start by putting the initial bracket '[' in the JSON
 	toReturn = malloc(2);
@@ -618,7 +645,7 @@ char* eventListToJSON(const List* eventList) {
 	Event *ev;
 	while ((ev = (Event *)nextElement(&iter)) != NULL) {
 		tempEvJSON = eventToJSON(ev);
-		debugMsg("Event JSON just created: \"%s\"\n", tempEvJSON);
+		debugMsg("\tEvent JSON just created: \"%s\"\n", tempEvJSON);
 		currentLength += strlen(tempEvJSON);
 		toReturn = realloc(toReturn, currentLength);
 
@@ -632,6 +659,8 @@ char* eventListToJSON(const List* eventList) {
 	// There will always be a trailing comma at the very end of the string
 	toReturn[currentLength-1] = ']';
 
+	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
+
 	return toReturn;
 }
 
@@ -644,17 +673,24 @@ char* eventListToJSON(const List* eventList) {
 char* calendarToJSON(const Calendar* cal) {
 	char *toReturn;
 	int written;
+	debugMsg("----START calendarToJSON()----\n");
 
 	if (cal == NULL) {
 		toReturn = malloc(3);
 		strcpy(toReturn, "{}");
+		notifyMsg("\tCalendar is null, returning \"%s\"\n", toReturn);
 		return toReturn;
 	}
+
+	char *temp = printCalendar(cal);
+	debugMsg("\tCalendar passed: \"%s\"\n", temp);
+	free(temp);
 
 	toReturn = malloc(2000);
 	written = snprintf(toReturn, 2000, "{\"version\":%d,\"prodID\":\"%s\",\"numProps\":%d,\"numEvents\":%d}", \
 	                   (int)cal->version, cal->prodID, getLength(cal->properties) + 2, getLength(cal->events));
 
+	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
 	return realloc(toReturn, written + 1);
 }
 
@@ -665,21 +701,28 @@ char* calendarToJSON(const Calendar* cal) {
  *@param str - a pointer to a string
  **/
 Calendar* JSONtoCalendar(const char* str) {
+	debugMsg("-----START JSONtoCalendar()-----\n");
 	if (str == NULL) {
+		notifyMsg("\tJSON string is NULL, returning NULL\n");
 		return NULL;
 	}
 
+	debugMsg("\tJSON string passed: \"%s\"\n", str);
 	Calendar *toReturn;
 	if (initializeCalendar(&toReturn) != OK) {
+		errorMsg("\tSomething bad happened in initializeCalendar(), returning NULL\n");
 		return NULL;
 	}
 
 	// The JSON string 'str' is similar to the JSON string created by calendarToJSON(),
 	// except it lacks the list info.
 	if (sscanf(str, "{\"version\":%f,\"prodID\":\"%999[^\"]\"}", &(toReturn->version), toReturn->prodID) < 2) {
+		errorMsg("\tUnable to parse the JSON for some reason. Returning NULL\n");
 		return NULL;
 	}
 
+	debugMsg("\tSuccessfully created a Calendar object\n");
+	debugMsg("\t-----END JSONtoCalendar()-----\n");
 	return toReturn;
 }
 
@@ -690,20 +733,29 @@ Calendar* JSONtoCalendar(const char* str) {
  *@param str - a pointer to a string
  **/
 Event* JSONtoEvent(const char* str) {
+	debugMsg("-----START JSONtoEvent()-----\n");
 	if (str == NULL) {
+		notifyMsg("\tPassed string is NULL, returning NULL\n");
 		return NULL;
 	}
 
+	debugMsg("\tJSON string passed: \"%s\"\n", str);
+
 	Event *toReturn;
 	if (initializeEvent(&toReturn) != OK) {
+		errorMsg("\tSomething happened in initializeEvent(), returning NULL\n");
 		return NULL;
 	}
 
 	// The JSON string 'str' contains only a "UID" field
-	if (sscanf(str, "{\"UID\":\"%s\"}", toReturn->UID) < 1) {
+	if (sscanf(str, "{\"UID\":\"%999[^\"]\"}", toReturn->UID) < 1) {
+		errorMsg("\tCould not correctly parse the JSON string, returning NULL\n");
 		return NULL;
 	}
 
+	char *temp = printEvent(toReturn);
+	notifyMsg("\tSuccessfully parsed the JSON into an Event object: \"%s\"\n", temp);
+	free(temp);
 	return toReturn;
 }
 
