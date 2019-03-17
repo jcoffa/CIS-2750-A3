@@ -104,6 +104,50 @@ char *fakeDT() {
     return realloc(toReturn, written+1);
 }
 
+char *fakeProperty() {
+	seedrand();
+
+	char *toReturn = malloc(3000);
+
+	char *fakeName = fakeText(false, 1);
+	char *fakeDescr = fakeText(false, 3);
+
+	int written = snprintf(toReturn, 3000, "{\"propName\":\"%s\",\"propDescr\":\"%s\"}", \
+	                       fakeName, fakeDescr);
+	free(fakeName);
+	free(fakeDescr);
+
+	return realloc(toReturn, written+1);
+}
+
+char *fakePropertyList(short int numProps) {
+	seedrand();
+
+	char *toReturn = malloc(3);
+	int curLen = 1;
+	char *temp;
+
+	if (numProps == 0) {
+		strcpy(toReturn, "[]");
+		return toReturn;
+	}
+
+	strcpy(toReturn, "[");
+
+	for (int i = 0; i < numProps; i++) {
+		temp = fakeProperty();
+		curLen += strlen(temp)+1;	// +1 for comma
+		toReturn = realloc(toReturn, curLen+1);	// +1 for null terminator
+		strcat(toReturn, temp);
+		strcat(toReturn, ",");
+		free(temp);
+	}
+
+	toReturn[curLen-1] = ']';
+
+	return toReturn;
+}
+
 char *fakeAlarm() {
     seedrand();
 
@@ -111,32 +155,96 @@ char *fakeAlarm() {
 
     char *fakeAct = fakeText(true, 2);
     char *fakeTrig = fakeText(false, 1);
+	int numProps = rand()%4;
+	char *fakePropList = fakePropertyList(numProps);
 
-    int written = snprintf(toReturn, 2000, "{\"action\":\"%s\",\"trigger\":\"%s\",\"numProps\":%d}",\
-                           fakeAct, fakeTrig, rand() % 10);
+    int written = snprintf(toReturn, 2000, "{\"action\":\"%s\",\"trigger\":\"%s\",\"numProps\":%d,\"properties\":%s}",\
+                           fakeAct, fakeTrig, numProps, fakePropList);
 
     free(fakeAct);
     free(fakeTrig);
+	free(fakePropList);
 
     return realloc(toReturn, written+1);
+}
+
+char *fakeAlarmList(short int numAlarms) {
+	seedrand();
+
+	char *toReturn = malloc(3);
+	int curLen = 1;
+	char *temp;
+
+	if (numAlarms == 0) {
+		strcpy(toReturn, "[]");
+		return toReturn;
+	}
+
+	strcpy(toReturn, "[");
+
+	for (int i = 0; i < numAlarms; i++) {
+		temp = fakeAlarm();
+		curLen += strlen(temp)+1;	// +1 for comma
+		toReturn = realloc(toReturn, curLen+1);	// +1 for null terminator
+		strcat(toReturn, temp);
+		strcat(toReturn, ",");
+		free(temp);
+	}
+
+	toReturn[curLen-1] = ']';
+
+	return toReturn;
 }
 
 char *fakeEvent() {
     seedrand();
 
-    char *toReturn = malloc(2000);
+    char *toReturn = malloc(4000);
 
     char *fakeSummary = fakeText(true, 10);
-
     char *fakeStart = fakeDT();
+	int numProps = rand()%4;
+	char *fakeProps = fakePropertyList(numProps);
+	int numAlarms = rand()%4;
+	char *fakeAlarms = fakeAlarmList(numAlarms);
 
-    int written = snprintf(toReturn, 1000, "{\"startDT\":%s,\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\"}", \
-                  fakeStart, rand() % 10, rand() % 8, fakeSummary);
+    int written = snprintf(toReturn, 4000, "{\"startDT\":%s,\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\",\"properties\":%s,\"alarms\":%s}", \
+                  fakeStart, numProps, numAlarms, fakeSummary, fakeProps, fakeAlarms);
 
     free(fakeSummary);
     free(fakeStart);
+	free(fakeProps);
+	free(fakeAlarms);
 
     return realloc(toReturn, written+1);
+}
+
+char *fakeEventList(short int numEvents) {
+	seedrand();
+
+	char *toReturn = malloc(3);
+	int curLen = 1;
+	char *temp;
+
+	if (numEvents == 0) {
+		strcpy(toReturn, "[]");
+		return toReturn;
+	}
+
+	strcpy(toReturn, "[");
+
+	for (int i = 0; i < numEvents; i++) {
+		temp = fakeEvent();
+		curLen += strlen(temp)+1;	// +1 for comma
+		toReturn = realloc(toReturn, curLen+1);	// +1 for null terminator
+		strcat(toReturn, temp);
+		strcat(toReturn, ",");
+		free(temp);
+	}
+
+	toReturn[curLen-1] = ']';
+
+	return toReturn;
 }
 
 char *fakeCal() {
@@ -145,9 +253,13 @@ char *fakeCal() {
     char *toReturn = malloc(2000);
 
     char *fakeProdid = fakeText(false, 4);
+	int numProps = rand()%4;
+	char *fakeProps = fakePropertyList(numProps);
+	int numEvents = (rand()%3)+1;
+	char *fakeEvents = fakeEventList(numEvents);
 
-    int written = snprintf(toReturn, 2000, "{\"version\":2,\"prodID\":\"%s\",\"numProps\":%d,\"numEvents\":%d}",\
-                           fakeProdid, rand() % 10, rand() % 8);
+    int written = snprintf(toReturn, 2000, "{\"version\":2,\"prodID\":\"%s\",\"numProps\":%d,\"numEvents\":%d,\"properties\":%s,\"events\":%s}",\
+                           fakeProdid, numProps+2, numEvents, fakeProps, fakeEvents);
 
     free(fakeProdid);
 

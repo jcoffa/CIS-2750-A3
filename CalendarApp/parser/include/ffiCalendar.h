@@ -21,9 +21,17 @@ char *fakeText(bool spaces, int numWords);
 
 char *fakeDT();
 
+char *fakeProperty();
+
+char *fakePropertyList(short int numProps);
+
 char *fakeAlarm();
 
+char *fakeAlarmList(short int numAlarms);
+
 char *fakeEvent();
+
+char *fakeEventList(short int numEvents);
 
 char *fakeCal();
 
