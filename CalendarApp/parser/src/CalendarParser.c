@@ -618,12 +618,11 @@ char *propertyListToJSON(const List *propList) {
 	while ((prop = (Property *)nextElement(&iter)) != NULL) {
 		tempPropJSON = propertyToJSON(prop);
 		debugMsg("\tProperty JSON just created: \"%s\"\n", tempPropJSON);
-		currentLength += strlen(tempPropJSON);
-		toReturn = realloc(toReturn, currentLength);
+		currentLength += strlen(tempPropJSON)+1;	// +1 for comma
+		toReturn = realloc(toReturn, currentLength+1);	// +1 for null terminator
 
 		strcat(toReturn, tempPropJSON);
 		strcat(toReturn, ",");
-		currentLength += 1;
 
 		free(tempPropJSON);
 	}
@@ -635,6 +634,79 @@ char *propertyListToJSON(const List *propList) {
 
 	return toReturn;
 
+}
+
+// Converts a single Alarm into a JSON string
+char *alarmToJSON(const Alarm *alarm) {
+	char *toReturn, *propListJ;
+	int written;
+
+	debugMsg("-----START alarmToJSON()-----\n");
+
+	if (alarm == NULL) {
+		errorMsg("\tAlarm passed is NULL, returning \"{}\"\n");
+		toReturn = malloc(3);
+		strcpy(toReturn, "{}");
+		return toReturn;
+	}
+
+	propListJ = propertyListToJSON(alarm->properties);
+	toReturn = malloc(20000);
+	written = snprintf(toReturn, 20000, "{\"action\":\"%s\",\"trigger\":\"%s\",\"numProps\":%d,\"properties\":%s}",\
+	                   alarm->action, alarm->trigger, getLength(alarm->properties)+2, propListJ);
+	free(propListJ);
+
+	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
+
+	return realloc(toReturn, written + 1);
+}
+
+// Converts an Alarm list into a JSON string
+char *alarmListToJSON(const List* alarmList) {
+	char *toReturn, *tempAlJSON;
+	int currentLength;
+
+	debugMsg("-----START alarmListToJSON()-----\n");
+
+	// Casting a List * into a List * to avoid a warning regarding non-const parameters
+	if (alarmList == NULL || getLength((List *)alarmList) == 0) {
+		toReturn = malloc(3);
+		strcpy(toReturn, "[]");
+		notifyMsg("\tAlarm List empty or NULL, returning \"%s\"\n", toReturn);
+		return toReturn;
+	}
+
+	char *temp = toString((List *)alarmList);
+	debugMsg("\tAlarm list passed: \"%s\"\n", temp);
+	free(temp);
+
+	// Start by putting the initial bracket '[' in the JSON
+	toReturn = malloc(2);
+	strcpy(toReturn, "[");
+	currentLength = 1;
+
+	// Add all the alarm JSON's to 'toReturn'
+	// Casting a List * into a List * to avoid a warning regarding non-const parameters
+	ListIterator iter = createIterator((List *)alarmList);
+	Alarm *al;
+	while ((al = (Alarm *)nextElement(&iter)) != NULL) {
+		tempAlJSON = alarmToJSON(al);
+		debugMsg("\tAlarm JSON just created: \"%s\"\n", tempAlJSON);
+		currentLength += strlen(tempAlJSON)+1;	// +1 for the comma
+		toReturn = realloc(toReturn, currentLength+1); // +1 for null terminator
+
+		strcat(toReturn, tempAlJSON);
+		strcat(toReturn, ",");
+
+		free(tempAlJSON);
+	}
+
+	// There will always be a trailing comma at the very end of the string
+	toReturn[currentLength-1] = ']';
+
+	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
+
+	return toReturn;
 }
 
 /** Function to converting an Event into a JSON string
@@ -668,19 +740,30 @@ char* eventToJSON(const Event* event) {
 		Property *summary = findElement(event->properties, propNamesEqual, dummy);
 		free(dummy);
 
+		// Get Property and Alarm List JSONs
+		char *propListJ = propertyListToJSON(event->properties);
+		char *alarmListJ = alarmListToJSON(event->alarms);
+
 		// Allocate memory depending on whether a SUMMARY property needs to be written
-		int size = (summary == NULL) ? 500 : strlen(summary->propDescr) + 500;
+		int lenProps = strlen(propListJ);
+		int lenAlarms = strlen(alarmListJ);
+		int size = (summary == NULL) ? 500+lenProps+lenAlarms : strlen(summary->propDescr) + 500+lenProps+lenAlarms;
 		toReturn = malloc(size);
 
 		// Write the JSON in toReturn
-		written = snprintf(toReturn, size, "{\"startDT\":%s,\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\"}", \
+		written = snprintf(toReturn, size, "{\"startDT\":%s,\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\",\"properties\":%s,\"alarms\":%s}", \
 		                   startDT, getLength(event->properties)+3, getLength(event->alarms), \
 		                   // findElement returns NULL if the property could not be found in 'event',
 		                   // in which case an empty string is written instead of the summary properties description
-		                   (summary == NULL) ? "" : summary->propDescr);
+		                   (summary == NULL) ? "" : summary->propDescr, \
+		                   propListJ, alarmListJ);
 
 		// NOTE: +3 is added to the length of the Event's proeprty list because
 		// the required UID and the 2 required DateTimes count as properties
+
+		free(startDT);
+		free(propListJ);
+		free(alarmListJ);
 	}
 
 	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
@@ -724,12 +807,11 @@ char* eventListToJSON(const List* eventList) {
 	while ((ev = (Event *)nextElement(&iter)) != NULL) {
 		tempEvJSON = eventToJSON(ev);
 		debugMsg("\tEvent JSON just created: \"%s\"\n", tempEvJSON);
-		currentLength += strlen(tempEvJSON);
-		toReturn = realloc(toReturn, currentLength);
+		currentLength += strlen(tempEvJSON)+1;	// +1 for comma
+		toReturn = realloc(toReturn, currentLength+1);	// +1 for null terminator
 
 		strcat(toReturn, tempEvJSON);
 		strcat(toReturn, ",");
-		currentLength += 1;
 
 		free(tempEvJSON);
 	}
@@ -742,79 +824,6 @@ char* eventListToJSON(const List* eventList) {
 	return toReturn;
 }
 
-// Converts a single Alarm into a JSON string
-char *alarmToJSON(const Alarm *alarm) {
-	char *toReturn;
-	int written;
-
-	debugMsg("-----START alarmToJSON()-----\n");
-
-	if (alarm == NULL) {
-		errorMsg("\tAlarm passed is NULL, returning \"{}\"\n");
-		toReturn = malloc(3);
-		strcpy(toReturn, "{}");
-		return toReturn;
-	}
-
-	toReturn = malloc(1000);
-	written = snprintf(toReturn, 1000, "{\"action\":\"%s\",\"trigger\":\"%s\",\"numProps\":%d}",\
-	                   alarm->action, alarm->trigger, getLength(alarm->properties)+2);
-
-	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
-
-	return realloc(toReturn, written + 1);
-}
-
-// Converts an Alarm list into a JSON string
-char *alarmListToJSON(const List* alarmList) {
-	char *toReturn, *tempAlJSON;
-	int currentLength;
-
-	debugMsg("-----START alarmListToJSON()-----\n");
-
-	// Casting a List * into a List * to avoid a warning regarding non-const parameters
-	if (alarmList == NULL || getLength((List *)alarmList) == 0) {
-		toReturn = malloc(3);
-		strcpy(toReturn, "[]");
-		notifyMsg("\tAlarm List empty or NULL, returning \"%s\"\n", toReturn);
-		return toReturn;
-	}
-
-	char *temp = toString((List *)alarmList);
-	debugMsg("\tAlarm list passed: \"%s\"\n", temp);
-	free(temp);
-
-	// Start by putting the initial bracket '[' in the JSON
-	toReturn = malloc(2);
-	strcpy(toReturn, "[");
-	currentLength = 1;
-
-	// Add all the alarm JSON's to 'toReturn'
-	// Casting a List * into a List * to avoid a warning regarding non-const parameters
-	ListIterator iter = createIterator((List *)alarmList);
-	Alarm *al;
-	while ((al = (Alarm *)nextElement(&iter)) != NULL) {
-		tempAlJSON = alarmToJSON(al);
-		debugMsg("\tAlarm JSON just created: \"%s\"\n", tempAlJSON);
-		currentLength += strlen(tempAlJSON);
-		toReturn = realloc(toReturn, currentLength);
-
-		strcat(toReturn, tempAlJSON);
-		strcat(toReturn, ",");
-		currentLength += 1;
-
-		free(tempAlJSON);
-	}
-
-	// There will always be a trailing comma at the very end of the string
-	toReturn[currentLength-1] = ']';
-
-	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
-
-	return toReturn;
-
-}
-
 /** Function to converting a Calendar into a JSON string
  *@pre Calendar is not NULL
  *@post Calendar has not been modified in any way
@@ -822,7 +831,7 @@ char *alarmListToJSON(const List* alarmList) {
  *@param cal - a pointer to a Calendar struct
  **/
 char* calendarToJSON(const Calendar* cal) {
-	char *toReturn;
+	char *toReturn, *propListJ, *eventListJ;
 	int written;
 	debugMsg("----START calendarToJSON()----\n");
 
@@ -837,12 +846,65 @@ char* calendarToJSON(const Calendar* cal) {
 	debugMsg("\tCalendar passed: \"%s\"\n", temp);
 	free(temp);
 
-	toReturn = malloc(2000);
-	written = snprintf(toReturn, 2000, "{\"version\":%d,\"prodID\":\"%s\",\"numProps\":%d,\"numEvents\":%d}", \
-	                   (int)cal->version, cal->prodID, getLength(cal->properties) + 2, getLength(cal->events));
+	// Get Property and Event List JSONs
+	propListJ = propertyListToJSON(cal->properties);
+	eventListJ = eventListToJSON(cal->events);
+	int size = 2000 + strlen(propListJ) + strlen(eventListJ);
+
+	toReturn = malloc(size);
+	written = snprintf(toReturn, size, "{\"version\":%d,\"prodID\":\"%s\",\"numProps\":%d,\"numEvents\":%d,\"properties\":%s,\"events\":%s}", \
+	                   (int)cal->version, cal->prodID, getLength(cal->properties) + 2, getLength(cal->events), \
+	                   propListJ, eventListJ);
 
 	notifyMsg("\tJSON created: \"%s\"\n", toReturn);
 	return realloc(toReturn, written + 1);
+}
+
+DateTime JSONtoDT(const char *str) {
+	debugMsg("-----JSONtoDT()-----\n");
+	DateTime toReturn;
+
+	if (str == NULL) {
+		errorMsg("\tJSON passed is NULL\n");
+		strcpy(toReturn.date, "");
+		strcpy(toReturn.time, "");
+		toReturn.UTC = false;
+		return toReturn;
+	}
+
+	char tempDate[9];
+	char tempTime[7];
+	char tempTF[10];
+	if (sscanf(str, "{\"date\":\"%8[^\"]\",\"time\":\"%6[^\"]\",\"isUTC\":%9[^}]}" , tempDate, tempTime, tempTF) < 3) {
+		errorMsg("\tSomething went wrong parsing the JSON\n");
+		strcpy(toReturn.date, "");
+		strcpy(toReturn.time, "");
+		toReturn.UTC = false;
+		return toReturn;
+	}
+
+	strncpy(toReturn.date, tempDate, 9);
+	(toReturn.date)[8] = '\0';
+	strncpy(toReturn.time, tempTime, 7);
+	(toReturn.time)[6] = '\0';
+
+	if (strcmp(tempTF, "true") == 0) {
+		toReturn.UTC = true;
+	} else if (strcmp(tempTF, "false") == 0) {
+		toReturn.UTC = false;
+	} else {
+		errorMsg("\tEncountered a non true/false isUTC value\n");
+		strcpy(toReturn.date, "");
+		strcpy(toReturn.time, "");
+		toReturn.UTC = false;
+		return toReturn;
+	}
+
+	char *temp = printDate(&toReturn);
+	debugMsg("\tCreated DateTime: \"%s\"", temp);
+	free(temp);
+
+	return toReturn;
 }
 
 // Converts a JSON string into a Property struct
@@ -863,7 +925,7 @@ Property *JSONtoProperty(const char *str) {
 	// the } that terminates the object string, and the last d-quote must be chopped off the
 	// description that is copied over.
 	if (sscanf(str, "{\"propName\":\"%199[^\"]\",\"propDescr\":\"%9999[^}]\"}", tempName, tempDescr) < 2) {
-		errorMsg("\tCould not correctly parse the JSOn string, returning NULL\n");
+		errorMsg("\tCould not correctly parse the JSON string, returning NULL\n");
 		return NULL;
 	}
 	int descrLen = strlen(tempDescr);
@@ -878,11 +940,42 @@ Property *JSONtoProperty(const char *str) {
 	strcpy(toReturn->propDescr, tempDescr);
 
 	char *temp = printProperty(toReturn);
-	notifyMsg("\tSuccessfully parsed the JSOn into a Property object: \"%s\"\n", temp);
+	notifyMsg("\tSuccessfully parsed the JSON into a Property object: \"%s\"\n", temp);
 	free(temp);
 
 	return toReturn;
 }
+
+// Converts a JSON string into an Alarm struct
+Alarm *JSONtoAlarm(const char *str) {
+	debugMsg("-----START JSONtoAlarm()-----\n");
+	if (str == NULL) {
+		notifyMsg("\tPassed string is NULL, returning NULL\n");
+		return NULL;
+	}
+
+	debugMsg("\tJSON string passed: \"%s\"\n", str);
+
+	Alarm *toReturn;
+	if (initializeAlarm(&toReturn) != OK) {
+		errorMsg("\tSomething happened in initializeAlarm(), returning NULL\n");
+		return NULL;
+	}
+
+	toReturn->trigger = malloc(2000);
+	if (sscanf(str, "{\"action\":\"%199[^\"]\",\"trigger\":\"%1999[^\"]\"}", toReturn->action, toReturn->trigger) < 2) {
+		errorMsg("\tCould not correctly parse the JSON string, returning NULL\n");
+		deleteAlarm(toReturn);
+		return NULL;
+	}
+	toReturn->trigger = realloc(toReturn->trigger, strlen(toReturn->trigger) + 1);
+
+	char *temp = printAlarm(toReturn);
+	notifyMsg("\tSuccessfully parsed the JSON into an Alarm object: \"%s\"\n", temp);
+	free(temp);
+	return toReturn;
+}
+
 
 /** Function to converting a JSON string into an Event struct
  *@pre JSON string is not NULL
@@ -914,36 +1007,6 @@ Event* JSONtoEvent(const char* str) {
 
 	char *temp = printEvent(toReturn);
 	notifyMsg("\tSuccessfully parsed the JSON into an Event object: \"%s\"\n", temp);
-	free(temp);
-	return toReturn;
-}
-
-// Converts a JSON string into an Alarm struct
-Alarm *JSONtoAlarm(const char *str) {
-	debugMsg("-----START JSONtoAlarm()-----\n");
-	if (str == NULL) {
-		notifyMsg("\tPassed string is NULL, returning NULL\n");
-		return NULL;
-	}
-
-	debugMsg("\tJSON string passed: \"%s\"\n", str);
-
-	Alarm *toReturn;
-	if (initializeAlarm(&toReturn) != OK) {
-		errorMsg("\tSomething happened in initializeAlarm(), returning NULL\n");
-		return NULL;
-	}
-
-	toReturn->trigger = malloc(2000);
-	if (sscanf(str, "{\"action\":\"%199[^\"]\",\"trigger\":\"%1999[^\"]\"}", toReturn->action, toReturn->trigger) < 2) {
-		errorMsg("\tCould not correctly parse the JSON string, returning NULL\n");
-		deleteAlarm(toReturn);
-		return NULL;
-	}
-	toReturn->trigger = realloc(toReturn->trigger, strlen(toReturn->trigger) + 1);
-
-	char *temp = printAlarm(toReturn);
-	notifyMsg("\tSuccessfully parsed the JSON into an Alarm object: \"%s\"\n", temp);
 	free(temp);
 	return toReturn;
 }

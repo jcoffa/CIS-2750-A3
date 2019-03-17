@@ -122,8 +122,6 @@ char* printCalendar(const Calendar* obj);
 char* printError(ICalErrorCode err);
 
 
-// ************* A2 functionality - MUST be implemented ***************
-
 /** Function to writing a Calendar object into a file in iCalendar format.
  *@pre
     Calendar object exists, and is not NULL.
@@ -147,6 +145,12 @@ ICalErrorCode writeCalendar(char* fileName, const Calendar* obj);
 ICalErrorCode validateCalendar(const Calendar* obj);
 
 
+
+
+/****************************
+ * Struct to JSON Functions *
+ ****************************/
+
 /** Function to converting a DateTime into a JSON string
  *@pre N/A
  *@post DateTime has not been modified in any way
@@ -160,6 +164,12 @@ char *propertyToJSON(const Property *prop);
 
 // Converts a Property list into a JSON string
 char *propertyListToJSON(const List *propList);
+
+// Converts a single Alarm into a JSON string
+char *alarmToJSON(const Alarm *alarm);
+
+// Converts an Alarm list into a JSON string
+char *alarmListToJSON(const List* alarmList);
 
 /** Function to converting an Event into a JSON string
  *@pre Event is not NULL
@@ -177,12 +187,6 @@ char* eventToJSON(const Event* event);
  **/
 char* eventListToJSON(const List* eventList);
 
-// Converts a single Alarm into a JSON string
-char *alarmToJSON(const Alarm *alarm);
-
-// Converts an Alarm list into a JSON string
-char *alarmListToJSON(const List* alarmList);
-
 /** Function to converting a Calendar into a JSON string
  *@pre Calendar is not NULL
  *@post Calendar has not been modified in any way
@@ -190,6 +194,16 @@ char *alarmListToJSON(const List* alarmList);
  *@param cal - a pointer to a Calendar struct
  **/
 char* calendarToJSON(const Calendar* cal);
+
+
+
+
+/****************************
+ * JSON to Struct Functions *
+ ****************************/
+
+// Converts a JSON string into a DateTime struct
+DateTime JSONtoDT(const char *str);
 
 // Converts a JSON string into a Property struct
 Property *JSONtoProperty(const char *str);
@@ -213,6 +227,8 @@ Alarm *JSONtoAlarm(const char *str);
  **/
 Calendar* JSONtoCalendar(const char* str);
 
+// *********************************************************************
+
 /** Function to adding an Event struct to an existing Calendar struct
  *@pre arguments are not NULL
  *@post The new event has been added to the calendar's events list
@@ -222,11 +238,13 @@ Calendar* JSONtoCalendar(const char* str);
  **/
 void addEvent(Calendar* cal, Event* toBeAdded);
 
-// *********************************************************************
 
 
 
-// ************* List helper functions - MUST be implemented *************** 
+/*************************
+ * List Helper Functions *
+ *************************/
+
 void deleteEvent(void* toBeDeleted);
 int compareEvents(const void* first, const void* second);
 char* printEvent(void* toBePrinted);
