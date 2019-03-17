@@ -72,13 +72,9 @@ app.get('/uploads/:name', function(req , res){
 
 //******************** Your code goes here ******************** 
 
-// Get an array of all files in the /uploads directory
+// Get an array of the absolute path of every file in the /uploads directory
 app.get('/uploadsContents', function(req, res) {
     var toSend = fs.readdirSync(__dirname + '/uploads/');
-
-    for (var i = 0; i < toSend.length; i++) {
-        toSend[i] = __dirname + '/uploads/' + toSend[i];
-    }
 
     res.send(toSend);
 });
@@ -91,6 +87,7 @@ let lib = ffi.Library('./libcalendar', {
     'fakeEvent': ['string', []],
     'fakeCal': ['string', []],
     'fakeProperty': ['string', []],
+    'createCalendarJSON' : ['string', ['string']],
 });
 
 app.get('/getFakeDT', function(req, res) {
@@ -126,6 +123,33 @@ app.get('/getFakeCal', function(req, res) {
 });
 
 // Real callbacks getting real data from a C shared library using ffi
+
+// Given a file name (which will be appended to the path to the /uploads/ dir),
+// returns the Calendar JSON created from that file, or an error code JSON on a failure.
+app.get('/getCal/:name', function(req, res) {
+    var path = __dirname + '/uploads/' + req.params.name;
+    console.log('\nCreating calendar from "' + path + '"');
+    var retStr = lib.createCalendarJSON(path);
+
+    var obj = JSON.parse(retStr);
+    var toReturn;
+
+    if (obj.error != undefined) {
+        // An error occurred
+        toReturn = obj;
+        console.log('Error occurred when creating calendar from "' + path + '": ' + toReturn.error);
+    } else {
+        // Calendar was created successfully
+        console.log('Successfully created calendar from "' + path + '"');
+        toReturn = {
+            'filename': req.params.name,
+            'obj': obj
+        };
+    }
+
+    res.send(toReturn);
+});
+
 /*
 app.get('/writeCalendar', function (req, res) {
     var calStr = calparser.createCalFileFromJSON(req.cal, req.evt, req.startDT, req.createDT, req.file);
