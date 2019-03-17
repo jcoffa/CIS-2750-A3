@@ -59,12 +59,12 @@
                  Add and remove rows in a table programatically-->
             <table id="fileLogTable" class="maxRowTable">
                 <thead>
-                    <tr>
+                    <tr id="fileLogHeader">
                         <th width="20%">File Name<br>(click to download)</th>
                         <th>Version</th>
                         <th width="60%">Product ID</th>
-                        <th>Events</th>
                         <th>Properties</th>
+                        <th>Events</th>
                     </tr>
                 </thead>
                 <tbody id="fileLogBody">
@@ -141,8 +141,17 @@
                 </div>
                 <div class="modal-body">
                     <form id="eventForm">
-                        Start Date: <input type="date" name="startDate"></input><br>
-                        Start Time: <input type="time" name="startTime"></input>
+                        <label for="eventStartDate">Start Date: </label>
+                        <input type="date" id="eventStartDate" name="startDate" required></input>Required<br>
+                        <label for="eventCreateDate">Creation Date: </label>
+                        <input type="date" id="eventCreateDate" name="creationDate" required></input>Required<br>
+                        <label for="eventStartTime">Start Time: </label>
+                        <input type="time" id="eventStartTime" name="startTime" required></input>Required<br>
+                        <label for="eventSummary">Summary: </label>
+                        <textarea id="eventSummary" rows="4" cols="100"></textarea>
+                        <hr>
+                        <input type="reset" value="Reset All Fields">
+                        <button id="submitEvent">Add Event</button>
                     </form>
                 </div>
             </div>
@@ -157,7 +166,21 @@
                 </div>
                 <div class="modal-body">
                     <form id="calendarForm">
-                        File Name: <input type="text" name="calFileName"></input>
+                        <label for="calFileName">File Name: </label>
+                        <input type="text" name="fileName" required></input>Required<br>
+                        <hr>
+                        <h5><u>Event</u></h5>
+                        <label for="calEventStartDate">Start Date: </label>
+                        <input type="date" id="calEventStartDate" name="startDate" required></input>Required<br>
+                        <label for="calEventCreateDate">Creation Date: </label>
+                        <input type="date" id="calEventCreateDate" name="creationDate" required></input>Required<br>
+                        <label for="calEventStartTime">Start Time: </label>
+                        <input type="time" id="calEventStartTime" name="startTime" required></input>Required<br>
+                        <label for="calEventSummary">Summary: </label>
+                        <textarea id="calEventSummary" rows="4" cols="100"></textarea>
+                        <hr>
+                        <input type="reset" value="Reset All Fields">
+                        <button id="submitCalendar">Create Calendar</button>
                     </form>
                 </div>
             </div>

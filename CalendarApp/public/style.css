@@ -111,6 +111,11 @@ hr {
     border: 3px outset #CFCFFF;
 }
 
+/* Input elements inside a form have a bit of a margin */
+form input {
+    margin: 5px;
+}
+
 /***************
  * Modal Stuff *
  ***************/
