@@ -94,6 +94,15 @@ runjson:
 	$(MAKE) JSON
 	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./JSON
 
+gdbjson:
+	$(MAKE) JSON
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH gdb ./JSON
+
+memoryjson:
+	$(MAKE) JSON
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./JSON
+
+
 
 # removes all .o and .so files
 clean:
