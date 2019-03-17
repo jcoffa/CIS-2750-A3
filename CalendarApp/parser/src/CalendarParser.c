@@ -860,6 +860,36 @@ char* calendarToJSON(const Calendar* cal) {
 	return realloc(toReturn, written + 1);
 }
 
+// Converts an ICalErrorCode into a JSON string
+char *errorCodeToJSON(ICalErrorCode err) {
+	char *toReturn = malloc(100);
+	char *errorStr = printError(err);
+
+	int written = snprintf(toReturn, 100, "{\"error\":\"%s\"}", errorStr);
+
+	return realloc(toReturn, written + 1);
+}
+
+// Identical to errorCodeToJSON(), except the additional field "filename":...
+// is contained in the JSON string as well. Only the part of the string after the
+// last '/' character is included in the "filename":... property.
+char *ferrorCodeToJSON(ICalErrorCode err, const char filepath[]) {
+	char *toReturn = malloc(500);
+	char *errorStr = printError(err);
+
+	char *justFileName = strrchr(filepath, '/');
+	if (justFileName == NULL) {
+		// The filepath is literally just the filename
+		justFileName = (char *)filepath;
+	} else {
+		justFileName += 1;
+	}
+
+	int written = snprintf(toReturn, 500, "{\"error\":\"%s\",\"filename\":\"%s\"}", errorStr, justFileName);
+
+	return realloc(toReturn, written + 1);
+}
+
 DateTime JSONtoDT(const char *str) {
 	debugMsg("-----JSONtoDT()-----\n");
 	DateTime toReturn;
