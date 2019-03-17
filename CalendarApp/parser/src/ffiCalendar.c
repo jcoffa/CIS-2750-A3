@@ -266,3 +266,25 @@ char *fakeCal() {
     return realloc(toReturn, written+1);
 }
 
+
+
+
+/**********************************
+ * Actual AJAX Callback Functions *
+ **********************************/
+
+// Takes a filename and returns a JSON string of a Calendar object, or an error code on a fail.
+char *createCalendarJSON(const char filepath[]) {
+	ICalErrorCode error;
+	Calendar *cal;
+
+	if ((error = createCalendar((char *)filepath, &cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath);
+	}
+
+	char *toReturn = calendarToJSON(cal);
+	deleteCalendar(cal);
+
+	return toReturn;
+}
+
