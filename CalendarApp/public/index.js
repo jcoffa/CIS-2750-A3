@@ -1,3 +1,7 @@
+/*********************
+ * Utility Functions *
+ *********************/
+
 // Clears the text of an element
 function clearText(id) {
     $('#' + id).val("");
@@ -28,6 +32,8 @@ function statusMsg(text) {
     addText('statusText', text);
 }
 
+// Returns a string that formats the 'date' part of the given DateTime JSON object
+// so it can be properly displayed in a table
 function formatDate(dt) {
     var toReturn = "";
 
@@ -40,6 +46,8 @@ function formatDate(dt) {
     return toReturn;
 }
 
+// Returns a string that formats the 'time' part of the given DateTime JSON object
+// so it can be properly displayed in a table
 function formatTime(dt) {
     var toReturn = "";
 
@@ -65,13 +73,68 @@ function addEventToTable(evt) {
     $('#eventTable').append(markup);
 }
 
-// Adds a new row to the File Log Panel table, given a Calendar JSON
-function addCalendarToTable(cal) {
-    var markup = "<tr><td><a href='/uploads/" + file.name + "'>" + file.name + "</a></td><td>"
+// Adds a new row to the File Log Panel table, given a Calendar JSON object and a file name string.
+// If a row with the same file name exists already in the File Log Panel, it is
+// replaced with the new Calendar passed into the function.
+function addCalendarToTable(filename, calendar) {
+    // First, determine if the first row of the table body contains the 'No files in system' text
+    var firstRowElement = $('#fileLogBody tr:eq(0) td').filter(function() {
+        return $(this).text() == 'No files in system';
+    });
+
+    // If the first row was the special 'table empty' row, remove it.
+    if (firstRowElement.length !== 0) {
+        firstRowElement.parent().remove();
+    }
+
+
+    // The markup for the new row in the table
+    var markup = "<tr><td><a href='/uploads/" + filename + "'>" + filename + "</a></td><td>"
                  + calendar.version + "</td><td>" + calendar.prodID + "</td><td>"
                  + calendar.numProps + "</td><td>" + calendar.numEvents + "</td></tr>";
 
-    $('#fileLogBody').append(markup);
+
+    // Check for duplicate file re-uploading
+    var prevRow = $('#fileLogBody td').filter(function() {
+        return $(this).text() == filename;
+    }).closest('tr');
+
+    // If a row with the fame filename was found, then it is a re-upload
+    if (prevRow.length !== 0) {
+        statusMsg('Re-uploading the file "' + filename + '"');
+
+        // Replace row in File Log Panel
+        prevRow.replaceWith(markup);
+    } else {
+        $('#fileLogBody').append(markup);
+    }
+}
+
+// Adds a new option to the Calendar File Selector, given a Calendar JSON object and a file name string.
+// If a row with the same file name exists already in the File Log Panel, it is
+// replaced with the new Calendar passed into the function.
+function addCalendarToFileSelector(filename, calendar) {
+    // The option object that will be added to the file selector
+    var option = new Option(filename, filename);
+    $(option).data('obj', calendar);
+
+    // Check for duplicate file re-uploading
+    var prevOption = $('#fileSelector').filter(function() {
+        return $(this).text() == filename;
+    });
+
+    // If an option with the same filename was found, then it is a re-upload
+    if (prevOption.length !== 0) {
+        // Replace entry in the 'Calendar File to View:' <select> element
+        prevOption.replaceWith(option);
+    } else {
+        // Brand new Calendar upload: add it to the file selector
+        $('#fileSelector').append(option);
+    }
+
+    // Select the new file
+    $('#fileSelector option[value="' + filename + '"]').attr('selected', 'selected');
+    $('#fileSelector').change();
 }
 
 function getFormData(form) {
@@ -85,8 +148,50 @@ function getFormData(form) {
     return formData;
 }
 
-// Put all onload AJAX calls here, and event listeners
-$(document).ready(function() { 
+function loadFile(file) {
+    $.ajax({
+        type: 'get',
+        dataType: 'json',
+        url: '/getCal/' + file,
+        success: function(cal) {
+            // In this case, 'success' just means the callback itself didn't encounter
+            // an error; the function itself could have still failed.
+            // Error code JSON's have the format, for example {"error":"Invalid Alarm","filename":"..."}
+
+
+            // All of this is good, and is staying
+            if (cal.error != undefined) {
+                statusMsg('Error when trying to create calendar from "' + cal.filename + '": ' + cal.error);
+
+                // On an error, only the File name and Product ID columns are filled,
+                // and the Product Id column only says 'invalid file'
+                addCalendarToTable(cal.filename, {
+                    'version': '',
+                    'prodID': 'invalid file',
+                    'numProps': '',
+                    'numEvents': ''
+                });
+            } else {
+                statusMsg('Loaded "' + cal.filename + '" successfully');
+                addCalendarToTable(cal.filename, cal.obj);
+                addCalendarToFileSelector(cal.filename, cal.obj);
+            }
+        },
+        fail: function(error) {
+            statusMsg(error);
+        }
+    });
+}
+
+
+
+
+
+/********************************************
+ * Onload AJAX calls, Event Listeners, etc. *
+ ********************************************/
+$(document).ready(function() {
+
     /******************************
      * Load all files in /uploads *
      ******************************/
@@ -94,29 +199,99 @@ $(document).ready(function() {
         type: 'get',
         url: '/uploadsContents',
         success: function(files) {
-            for (var filepath of files) {
-                // TODO read in each file
-                statusMsg(filepath);
+            for (var file of files) {
+                // Get a JSON of the calendar, and add it to the necessary HTML elements
+                loadFile(file);
             }
         }, fail: function(error) {
             statusMsg('Encountered an error while loading saved .ics files: ' + error);
         }
+    }); 
+
+
+
+
+
+    /**************************************************
+     * Event Listeners Relating to the File Log Panel *
+     **************************************************/
+
+    // Event listener for the <input type='file'...> element
+    // The function executes after the user hits 'Browse' and selects a file
+    $('#uploadFile').on('change', function() {
+        var file = this.files[0];
+        // If the file does not end with .ics, it is invalid
+        if (!file.name.endsWith('.ics')) {
+            alert("File uploads must be iCalendar files, which have the .ics file extension.\n" +
+                  "Please choose a different file.");
+            $('#uploadForm').trigger('reset'); // resets the entire uploading process
+        }
+    });
+
+    // Event listener for the 'Upload' button for uploading files
+    $('#uploadButton').click(function(e) {
+        // Submitting an HTML form has a default action of redirecting to another page.
+        // This statement overrides that lets us make an AJAX request and do other things
+        // if we want.
+        e.preventDefault();
+
+        // AJAX request
+        $.ajax({
+            url: '/upload',
+            type: 'post',
+            data: new FormData($('#uploadForm')[0]),
+            cache: false,
+            contentType: false,
+            processData: false,
+            // Simply putting xhr: $.ajaxSettings.xhr() does not work, so I have to do this function nonsense
+            xhr: function() {
+                return $.ajaxSettings.xhr();
+            },
+            success: function(file) {
+                // Errors with the file are handled inside the loadFile() function,
+                // so they do not need to be handled here.
+                loadFile(file);
+            },
+            fail: function(error) {
+                statusMsg('Encountered error when attempting to upload a file: ' + error);
+            }
+        });
     });
 
 
-    /***********************************
-     * Open/Close Modal Event Handlers *
-     ***********************************/
+
+
+
+    /*******************************************************
+     * Event Listeners Relating to the Calendar View Panel *
+     *******************************************************/
+
+    // Event listener for the <select..> tag where users can choose which Calendar in the
+    // File Log Panel to view the Events of
+    $('#fileSelector').change(function() {
+        // First, empty the Event Table body
+        $('#eventTable tbody').empty();
+
+        // Now add all the Events from the currently selected Calendar to the (now empty) Event Table tbody
+        var selected = $(this).find(':selected');
+
+        if (selected.data('obj').events.length === 0) {
+            var markup = '<tr><td></td><td></td><td></td><td>No Events in this Calendar! Calendars must have at least 1 Event in them</td><td></td><td></td></tr>';
+            return;
+        }
+
+        for (var i = 0; i < selected.data('obj').events.length; i++) {
+            var ev = selected.data('obj').events[i];
+            addEventToTable(ev);
+        }
+    });
+
+    // ========== Modals ==========
+    //  - Add Event to existing Calendar
+    //  - Create new Calendar
+    //  - Show Alarms for selected Event
+    //  - Show Properties for selected Event
     
-    // Add Event to Calendar
-    $('#addEventButton').click(function() {
-        $('#addEventModal').css("display", "block");
-    });
-    $('#closeModalEvent').click(function() {
-        $('#addEventModal').css("display", "none");
-        $('#eventForm').trigger('reset');
-    });
-
     // Create New Calendar
     $('#createCalendarButton').click(function() {
         $('#createCalendarModal').css("display", "block");
@@ -125,6 +300,43 @@ $(document).ready(function() {
         $('#createCalendarModal').css("display", "none");
         $('#calendarForm').trigger('reset');
     });
+
+    // Submit the Calendar created in the Create New Calendar modal
+    $('#submitCalendar').click(function(e) {
+        e.preventDefault();
+
+        var formData = getFormData($('#calendarForm'));
+        statusMsg('From calendarForm, got form data: "' + JSON.stringify(formData) + '"');
+
+        // TODO construct Calendar JSON and write it to /uploads with an AJAX call
+        // to the C backend
+
+        $('#closeModalCalendar').click();
+    });
+
+
+    // Add Event to Existing Calendar
+    $('#addEventButton').click(function() {
+        $('#addEventModal').css("display", "block");
+    });
+    $('#closeModalEvent').click(function() {
+        $('#addEventModal').css("display", "none");
+        $('#eventForm').trigger('reset');
+    });
+
+    // Submit the Event created in the Add Event To Calendar modal
+    $('#submitEvent').click(function(e) {
+        e.preventDefault();
+
+        var formData = getFormData($('#eventForm'));
+        statusMsg('From eventForm, got form data: "' + JSON.stringify(formData) + '"');
+
+        // TODO construct Event JSON and use addEvent() from the C backend to add it
+        // to the Calendar that was selected in the Calendar View Panel
+
+        $('#closeModalEvent').click();
+    }); 
+
 
     // Show Alarms For Selected Event
     $('#showAlarmsButton').click(function() {
@@ -191,153 +403,8 @@ $(document).ready(function() {
     });
 
 
-    // Event listener for the <input type='file'...> element
-    // The function executes after the user hits 'Browse' and selects a file
-    $('#uploadFile').on('change', function() {
-        var file = this.files[0];
-        // If the file does not end with .ics, it is invalid
-        if (!file.name.endsWith('.ics')) {
-            alert("File uploads must be iCalendar files, which have the .ics file extension.\n" +
-                  "Please choose a different file.");
-            $('#uploadForm').trigger('reset'); // resets the entire uploading process
-        }
-    });
-
-    // Event listener for the 'Upload' button for uploading files
-    $('#uploadButton').click(function(e) {
-        // Submitting an HTML form has a default action of redirecting to another page.
-        // This statement overrides that lets us make an AJAX request and do other things
-        // if we want.
-        e.preventDefault();
-
-        // AJAX request
-        $.ajax({
-            url: '/upload',
-            type: 'post',
-            data: new FormData($('#uploadForm')[0]),
-            cache: false,
-            contentType: false,
-            processData: false,
-            // Simply putting xhr: $.ajaxSettings.xhr() does not work, so I have to do this function nonsense
-            xhr: function() {
-                return $.ajaxSettings.xhr();
-            },
-            success: function(file) {
-                // Removed due to the need to check if it is a re-upload of a file
-                // already in the system. This is now printed in the nested AJAX call below.
-                //statusMsg('Successfully uploaded file "' + file.name + '"');
 
 
-                // Add the newly uploaded file to the File Log Panel after getting its JSON,
-                // and to the Calendar File list to see its Events (and be able to add an Event to it)
-                $.ajax({
-                    type: 'get',
-                    dataType: 'json',
-                    url: '/getFakeCal',  // TODO replace with the real "get calendar JSON" endpoint
-                    success: function(calendar) {
-                        // First, determine if this is a re-upload of a file with the same name
-                        var prevRow = $('#fileLogBody td').filter(function() {
-                            return $(this).text() == file.name;
-                        }).closest('tr');
-
-                        // Used to add the file to a table in a new row
-                        var markup = "<tr><td><a href='/uploads/" + file.name + "'>" + file.name + "</a></td><td>"
-                                     + calendar.version + "</td><td>" + calendar.prodID + "</td><td>"
-                                     + calendar.numProps + "</td><td>" + calendar.numEvents + "</td></tr>";
-
-                        // Used to add the file to the 'Calendar File to View:' <select> element
-                        var option = new Option(file.name, file.name);
-                        $(option).data('obj', calendar);
-
-
-                        if (prevRow.length !== 0) {
-                            // This is a re-upload, which must be overwritten in both the File Log Panel and the Calendar View Panel
-                            statusMsg('Re-uploading the file "' + file.name + '"');
-
-                            // Replace row in File Log Panel
-                            prevRow.replaceWith(markup);
-
-                            // Replace entry in the 'Calendar File to View:' <select> element
-                            var prevOption = $('#fileSelector option').filter(function() {
-                                return $(this).text() == file.name;
-                            });
-                            prevOption.replaceWith(option);
-                        } else {
-                            // The file is not yet in the system, so it can be added normally
-                            statusMsg('Successfully uploaded the file "' + file.name + '"');
-
-                            // Add calendar to the File Log Panel
-                            $('#fileLogBody').append(markup);
-
-                            // Add calendar to the Calendar File List
-                            /*
-                            $('#fileSelector').append($('<option>', {
-                                value: file.name,
-                                text: file.name
-                            }).data('obj', calendar));
-                            */
-                            $('#fileSelector').append(option);
-                        }
- 
-                        // Select the newly uploaded file in the 'Calendar File to View:' <select> element
-                        $('#fileSelector option[value="' + file.name + '"]').attr('selected', 'selected');
-                        $('#fileSelector').change();
-                    },
-                    fail: function(error) {
-                        statusMsg('Encountered error when retrieving Calendar JSON: ' + error);
-                    }
-                });
-            },
-            fail: function(error) {
-                statusMsg('Encountered error when attempting to upload a file: ' + error);
-            }
-        });
-    });
-
-
-    // Event listener for the <select..> tag where users can choose which Calendar in the
-    // File Log Panel to view the Events of
-    $('#fileSelector').change(function() {
-        // First, empty the Event Table body
-        $('#eventTable tbody').empty();
-
-        // Now add all the Events from the currently selected Calendar to the (now empty) Event Table tbody
-        var selected = $(this).find(':selected');
-        for (var i = 0; i < selected.data('obj').events.length; i++) {
-            var ev = selected.data('obj').events[i];
-            addEventToTable(ev);
-        }
-    });
-
-    /*****************************************************************
-     * AJAX Callbacks for Creating New Calendar and Adding New Event *
-     *****************************************************************/
-
-    // Submit the Calendar created in the Create New Calendar modal
-    $('#submitCalendar').click(function(e) {
-        e.preventDefault();
-
-        var formData = getFormData($('#calendarForm'));
-        statusMsg('From calendarForm, got form data: "' + JSON.stringify(formData) + '"');
-
-        // TODO construct Calendar JSON and write it to /uploads with an AJAX call
-        // to the C backend
-
-        $('#closeModalCalendar').click();
-    });
-
-    // Submit the Event created in the Add Event To Calendar modal
-    $('#submitEvent').click(function(e) {
-        e.preventDefault();
-
-        var formData = getFormData($('#eventForm'));
-        statusMsg('From eventForm, got form data: "' + JSON.stringify(formData) + '"');
-
-        // TODO construct Event JSON and use addEvent() from the C backend to add it
-        // to the Calendar that was selected in the Calendar View Panel
-
-        $('#closeModalEvent').click();
-    });
 
     /*******************************************
      * AJAX Callbacks for Calendar data JSON's *
@@ -359,38 +426,6 @@ $(document).ready(function() {
             }
         });
     });
-
-    // AJAX Stub : Fake Event
-    /*
-    $('#showPropertiesButton').click(function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            type: 'get',            //Request type
-            dataType: 'json',       //Data type - we will use JSON for almost everything 
-            url: '/getFakeEvent',   //The server endpoint we are connecting to
-            success: function (data) {
-                statusMsg('Received event-string JSON: "' + JSON.stringify(data) + '"');
-                //We write the object to the console to show that the request was successful
-                console.log(data);
-
-                addEventToTable(data);
-            },
-            fail: function(error) {
-                // Non-200 return, do something with error
-                console.log(error); 
-            }
-        });
-    });
-    */ 
-
-    // AJAX Stub : Fake Alarm
-    /*
-    $('#showAlarmsButton').click(function(e) {
-        e.preventDefault();
-
-            });
-    */ 
 
     // AJAX Stub : Fake Calendar
     $('#fakeCalButton').click(function(e) {
