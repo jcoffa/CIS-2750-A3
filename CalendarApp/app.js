@@ -53,11 +53,6 @@ app.post('/upload', function(req, res) {
     }
 
     // XXX I added this next res.send() thing, and commented out the res.redirect part
-    /*
-    res.send({
-        name: uploadFile.name
-    });
-    */
     res.send(uploadFile);
     //res.redirect('/');
   });
@@ -77,6 +72,17 @@ app.get('/uploads/:name', function(req , res){
 
 //******************** Your code goes here ******************** 
 
+// Get an array of all files in the /uploads directory
+app.get('/uploadsContents', function(req, res) {
+    var toSend = fs.readdirSync(__dirname + '/uploads/');
+
+    for (var i = 0; i < toSend.length; i++) {
+        toSend[i] = __dirname + '/uploads/' + toSend[i];
+    }
+
+    res.send(toSend);
+});
+
 
 // Real callbacks getting fake data from a C shared library using ffi
 let lib = ffi.Library('./libcalendar', {
@@ -84,11 +90,18 @@ let lib = ffi.Library('./libcalendar', {
     'fakeAlarm': ['string', []],
     'fakeEvent': ['string', []],
     'fakeCal': ['string', []],
+    'fakeProperty': ['string', []],
 });
 
 app.get('/getFakeDT', function(req, res) {
     var tempStr = lib.fakeDT();
     console.log('Got the following fake DateTime from C: "' + tempStr + '"');
+    res.send(tempStr);
+});
+
+app.get('/getFakeProperty', function(req, res) {
+    var tempStr = lib.fakeProperty();
+    console.log('Got the following fake property from C: "' + tempStr + '"');
     res.send(tempStr);
 });
 
