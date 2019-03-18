@@ -61,10 +61,10 @@
                 <thead>
                     <tr id="fileLogHeader">
                         <th width="20%">File Name<br>(click to download)</th>
-                        <th>Version</th>
-                        <th width="60%">Product ID</th>
-                        <th>Properties</th>
-                        <th>Events</th>
+                        <th width="5%">Version</th>
+                        <th width="55%">Product ID</th>
+                        <th width="10%">Number of<br>Properties</th>
+                        <th width="10%">Number of<br>Events</th>
                     </tr>
                 </thead>
                 <tbody id="fileLogBody">
@@ -104,15 +104,15 @@
         <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
              Add and remove rows in a table programatically -->
         <div align="center" class="scrollTableDiv">
-            <table id="eventTable">
+            <table id="eventTable" width="100%">
                 <thead>
                     <tr>
-                        <th>Select</th>
-                        <th width="15%">Start Date<br>YYYY/MM/DD</th>
-                        <th width="15%">Start Time<br>HH:MM:SS</th>
-                        <th width="45%">Summary</th>
-                        <th>Properties</th>
-                        <th>Alarms</th>
+                        <th width="5%">Select</th>
+                        <th width="10%">Start Date<br>YYYY/MM/DD</th>
+                        <th width="10%">Start Time<br>HH:MM:SS</th>
+                        <th width="50%">Summary</th>
+                        <th width="15%">Number of<br>Properties</th>
+                        <th width="10%">Number of<br>Alarms</th>
                     </tr>
                 </thead>
                 <tbody id="eventBody">
@@ -131,11 +131,8 @@
         <div class="clearfix">
             <div>
                 <form id="eventNo">
-                    <button type="button" id="showAlarmsButton" style="float:left">Show Alarms For Event (AJAX stub Alarm JSON)</button>
-                    <button type="button" id="showPropertiesButton" style="float:left">Show Properties For Event (AJAX stub Event JSON)</button>
-                    <!--<input type="number" min="1" placeholder="Event No." style="float:left">-->
-                    <button type="button" id="fakeDTbutton" style="float:left">(AJAX stub DateTime JSON)</button>
-                    <button type="button" id="fakeCalButton" style="float:left">(AJAX stub Calendar JSON)</button>
+                    <button type="button" id="showAlarmsButton" style="float:left">Show Alarms For Event</button>
+                    <button type="button" id="showPropertiesButton" style="float:left">Show Optional Properties For Event</button>
                 </form>
             </div>
         </div>
@@ -154,13 +151,14 @@
                     <span id="closeModalEvent" class="close">X</span>
                 </div>
                 <div class="modal-body">
+                    <b>* Required</b>
                     <form id="eventForm">
                         <label for="eventStartDate">Start Date: </label>
-                        <input type="date" id="eventStartDate" name="startDate" required></input>Required<br>
+                        <input type="date" id="eventStartDate" name="startDate" required></input><b>*</b><br>
                         <label for="eventCreateDate">Creation Date: </label>
-                        <input type="date" id="eventCreateDate" name="creationDate" required></input>Required<br>
+                        <input type="date" id="eventCreateDate" name="creationDate" required></input><b>*</b><br>
                         <label for="eventStartTime">Start Time: </label>
-                        <input type="time" id="eventStartTime" name="startTime" required></input>Required<br>
+                        <input type="time" id="eventStartTime" name="startTime" required></input><b>*</b><br>
                         <label for="eventSummary">Summary: </label>
                         <textarea id="eventSummary" rows="4" cols="100"></textarea>
                         <hr>
@@ -179,17 +177,20 @@
                     <span id="closeModalCalendar" class="close">X</span>
                 </div>
                 <div class="modal-body">
+                    <b>* Required</b>
                     <form id="calendarForm">
                         <label for="calFileName">File Name: </label>
-                        <input type="text" name="fileName" required></input>Required<br>
+                        <input type="text" name="fileName" required></input><b>*</b><br>
+                        <label for="calProductID">Product ID</label>
+                        <input type="text" id="calProductID" name="productID">(If not provided, one will be created for you)</input>
                         <hr>
                         <h5><u>Event</u></h5>
                         <label for="calEventStartDate">Start Date: </label>
-                        <input type="date" id="calEventStartDate" name="startDate" required></input>Required<br>
+                        <input type="date" id="calEventStartDate" name="startDate" required></input><b>*</b><br>
                         <label for="calEventCreateDate">Creation Date: </label>
-                        <input type="date" id="calEventCreateDate" name="creationDate" required></input>Required<br>
+                        <input type="date" id="calEventCreateDate" name="creationDate" required></input><b>*</b><br>
                         <label for="calEventStartTime">Start Time: </label>
-                        <input type="time" id="calEventStartTime" name="startTime" required></input>Required<br>
+                        <input type="time" id="calEventStartTime" name="startTime" required></input><b>*</b><br>
                         <label for="calEventSummary">Summary: </label>
                         <textarea id="calEventSummary" rows="4" cols="100"></textarea>
                         <hr>
@@ -220,7 +221,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <button id="testPropertyTable">Add Random Property</button>
                 </div>
             </div>
         </div>
@@ -246,7 +246,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <button id="testAlarmTable">Add Random Alarm</button>
                 </div>
             </div>
         </div>
