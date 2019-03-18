@@ -131,7 +131,13 @@ app.get('/getCal/:name', function(req, res) {
     console.log('\nCreating calendar from "' + path + '"');
     var retStr = lib.createCalendarJSON(path);
 
-    var obj = JSON.parse(retStr);
+    console.log('retStr = "' + retStr + '"');
+
+    try {
+        var obj = JSON.parse(retStr);
+    } catch (e) {
+        return res.status(500).send(e);
+    }
     var toReturn;
 
     if (obj.error != undefined) {
