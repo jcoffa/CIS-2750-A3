@@ -66,8 +66,8 @@ function formatTime(dt) {
 
 // Adds a new row to the Event List table, given an Event object retrieved from a JSON
 function addEventToTable(evt) {
-    var markup = "<tr><td><input type='radio' name='eventSelect'></td><td>" + formatDate(evt.startDT) + "</td><td>"
-                 + formatTime(evt.startDT) + "</td><td>" + evt.summary + "</td><td>" + evt.numProps + "</td><td>"
+    var markup = "<tr><td><input type='radio' name='eventSelect' data-obj='" + JSON.stringify(evt) + "'></td><td>" + formatDate(evt.startDT) + "</td><td>"
+                 + formatTime(evt.startDT) + "</td><td>" + evt.summary + "</td><td><b>" + evt.numProps + " (total)</b><br>" + (evt.numProps-3) + " (optional)</td><td>"
                  + evt.numAlarms + "</td></tr>";
 
     $('#eventTable').append(markup);
@@ -137,6 +137,33 @@ function addCalendarToFileSelector(filename, calendar) {
     $('#fileSelector').change();
 }
 
+function addAlarmToTable(alarm) {
+    // Markup the entire table row, which itself contains a table of properties
+    var markup = "<tr><td>" + alarm.action + "</td><td>" + alarm.trigger + "</td><td>"
+                 + "<table width='100%'><thead><tr><th width='25%'>Prop Name</th><th>Prop Descr</th></tr></thead><tbody>";
+
+    // Add alarm properties to the inner table
+    if (alarm.properties.length === 0) {
+        // Alarm contains no additional properties
+        markup += "<tr><td></td><td>No properties</td></tr>"
+    } else {
+        for (var prop of alarm.properties) {
+            markup += "<tr><td>" + prop.propName + "</td><td>" + prop.propDescr + "</td></tr>";
+        }
+    }
+    // finishing closing tags for the property table (and ending the row)
+    markup += "</tbody></table></tr>";
+
+    $('#eventAlarmBody').append(markup);
+}
+
+function addPropertyToTable(prop) {
+    // Markup for the row to add
+    var markup = "<tr><td>" + prop.propName + "</td><td>" + prop.propDescr + "</tr>"
+
+    $('#eventPropertyBody').append(markup);
+}
+
 function getFormData(form) {
     var formDataArray = form.serializeArray();
     var formData = {};
@@ -152,7 +179,7 @@ function loadFile(file) {
     $.ajax({
         type: 'get',
         dataType: 'json',
-        url: '/getCal/' + file,
+        url: '/getCal/' + file.name,
         success: function(cal) {
             // In this case, 'success' just means the callback itself didn't encounter
             // an error; the function itself could have still failed.
@@ -183,6 +210,22 @@ function loadFile(file) {
     });
 }
 
+// Returns true if all required input fields have been filled, and false otherwise.
+// Highlights the border of the input field red if it is both required and empty.
+function formHasAllRequired(formID) {
+    var allRequired = true;
+
+    $('#' + formID + ' input').each(function() {
+        if ($(this).prop('required') && $(this).val() === '') {
+            $(this).css('border-color', 'red');
+            allRequired = false;
+        } else {
+            $(this).css('border-color', '');
+        }
+    });
+
+    return allRequired;
+}
 
 
 
@@ -198,10 +241,11 @@ $(document).ready(function() {
     $.ajax({
         type: 'get',
         url: '/uploadsContents',
+        dataType: 'json',
         success: function(files) {
             for (var file of files) {
                 // Get a JSON of the calendar, and add it to the necessary HTML elements
-                loadFile(file);
+                loadFile({'name': file});
             }
         }, fail: function(error) {
             statusMsg('Encountered an error while loading saved .ics files: ' + error);
@@ -305,6 +349,10 @@ $(document).ready(function() {
     $('#submitCalendar').click(function(e) {
         e.preventDefault();
 
+        if (!formHasAllRequired('calendarForm')) {
+            return;
+        }
+
         var formData = getFormData($('#calendarForm'));
         statusMsg('From calendarForm, got form data: "' + JSON.stringify(formData) + '"');
 
@@ -328,6 +376,10 @@ $(document).ready(function() {
     $('#submitEvent').click(function(e) {
         e.preventDefault();
 
+        if (!formHasAllRequired('eventForm')) {
+            return;
+        }
+
         var formData = getFormData($('#eventForm'));
         statusMsg('From eventForm, got form data: "' + JSON.stringify(formData) + '"');
 
@@ -340,66 +392,55 @@ $(document).ready(function() {
 
     // Show Alarms For Selected Event
     $('#showAlarmsButton').click(function() {
+        var selectedEvent;
+
+        $('#eventBody tr td input:radio').each(function() {
+            if ($(this).prop('checked')) {
+                selectedEvent = $(this).data('obj');
+            }
+        });
+
+        // Add all the alarms to the table in the modal
+        if (selectedEvent.alarms.length === 0) {
+            var markup = "<tr><td></td><td></td><td>This event doesn't have any alarms</td><tr>";
+            $('#eventAlarmBody').append(markup);
+        } else {
+            for (var alarm of selectedEvent.alarms) {
+                addAlarmToTable(alarm);
+            }
+        }
         $('#viewAlarmsModal').css('display', 'block');
     });
     $('#closeModalAlarms').click(function() {
         $('#viewAlarmsModal').css('display', 'none');
-    });
-
-    // FOR TESTING ONLY: Add random Alarm
-    $('#testAlarmTable').click(function() {
-        $.ajax({
-            type: 'get',
-            dataType: 'json',
-            url: '/getFakeAlarm',
-            success: function(alarm) {
-                // Add alarm to table
-                var markup = "<tr><td>" + alarm.action + "</td><td>" + alarm.trigger + "</td><td>"
-                             + "<table width='100%'><thead><tr><th width='25%'>Prop Name</th><th>Prop Descr</th></tr></thead><tbody>";
-
-                for (var i = 0; i < alarm.properties.length; i++) {
-                    var prop = alarm.properties[i];
-                    markup += "<tr><td>" + prop.propName + "</td><td>" + prop.propDescr + "</td></tr>";
-                }
-                markup += "</tbody></table></tr>";
-
-                $('#eventAlarmBody').append(markup);
-
-                statusMsg('Added "' + JSON.stringify(alarm) + '" to Alarm Event modal');
-            },
-            fail: function(error) {
-                console.log(error);
-            }
-        });
-
+        $('#eventAlarmBody').empty();
     });
 
 
     // Show Properties For Selected Event
     $('#showPropertiesButton').click(function() {
+        var selectedEvent;
+
+        $('#eventBody tr td input:radio').each(function() {
+            if ($(this).prop('checked')) {
+                selectedEvent = $(this).data('obj');
+            }
+        });
+
+        // Add all the properties to the table in the modal
+        if (selectedEvent.properties.length === 0) {
+            var markup = "<tr><td></td><td>This event doesn't have any optional properties</td><tr>";
+            $('#eventPropertyBody').append(markup);
+        } else {
+            for (var prop of selectedEvent.properties) {
+                addPropertyToTable(prop);
+            }
+        }
         $('#viewPropertiesModal').css('display', 'block');
     });
     $('#closeModalProperties').click(function() {
         $('#viewPropertiesModal').css('display', 'none');
-    });
-
-    // FOR TESTING ONLY: Add random Property
-    $('#testPropertyTable').click(function() {
-        $.ajax({
-            url: '/getFakeProperty',
-            type: 'get',
-            dataType: 'json',
-            success: function(property) {
-                // Add Property to table
-                var markup = "<tr><td>" + property.propName + "</td><td>" + property.propDescr + "</td></tr>"
-
-                $('#eventPropertyBody').append(markup);
-                statusMsg('Added "' + JSON.stringify(property) + '" to the Property Event table');
-            },
-            fail: function(error) {
-                console.log(error);
-            }
-        });
+        $('#eventPropertyBody').empty();
     });
 
 
