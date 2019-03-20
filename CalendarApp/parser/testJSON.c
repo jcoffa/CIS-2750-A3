@@ -248,7 +248,17 @@ int main() {
 	free(json);
 	free(print);
 
-	freeList(events);
+
+	printf("\n\n------------------------------------------------------------\n");
+	printf("JSONtoEvent()\n\n");
+	char testEventJ[] = "{\"startDT\":{\"date\":\"20190308\",\"time\":\"164500\",\"isUTC\":false},\"createDT\":{\"date\":\"20190308\",\"time\":\"164500\",\"isUTC\":false},\"UID\":\"NULL\",\"numProps\":3,\"numAlarms\":0,\"summary\":\"NULL\",\"properties\":[this isnt empty],\"alarms\":[this also isnt empty]}";
+	Event *testEvent = JSONtoEvent(testEventJ);
+	
+	print = printEvent(testEvent);
+	printf("JSON: \"%s\"\n", testEventJ);
+	printf("\nEvent created: \"%s\"\n", print);
+	free(print);
+	deleteEvent(testEvent);
 	
 	return 0;
 }

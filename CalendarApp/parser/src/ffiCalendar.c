@@ -278,11 +278,113 @@ char *createCalendarJSON(const char filepath[]) {
 	ICalErrorCode error;
 	Calendar *cal;
 
+	if (filepath == NULL) {
+		return ferrorCodeToJSON(INV_FILE, "N/A", "File path was not received");
+	}
+
 	if ((error = createCalendar((char *)filepath, &cal)) != OK) {
-		return ferrorCodeToJSON(error, filepath);
+		return ferrorCodeToJSON(error, filepath, "Could not read in calendar from the file");
+	}
+
+	if ((error = validateCalendar(cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "File contains data that is invalid or wrong");
 	}
 
 	char *toReturn = calendarToJSON(cal);
+	deleteCalendar(cal);
+
+	return toReturn;
+}
+
+// Takes a filename and an Event JSON. Adds the Event to the Calendar created from the filename,
+// then overwrites the file with the new Calendar containing its shiny new event.
+// Returns the JSON of the new calendar.
+char *addEventJSON(const char filepath[], const char *eventJSON) {
+	ICalErrorCode error;
+	Calendar *cal;
+	Event *toAdd;
+	char *toReturn;
+
+	if (filepath == NULL) {
+		return ferrorCodeToJSON(INV_FILE, "N/A", "File path was not received");
+	}
+	if (eventJSON == NULL) {
+		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Event JSON was not received");
+	}
+
+	printf("filePath: \"%s\"\n", filepath);
+	printf("event JSON: \"%s\"\n", eventJSON);
+
+	if ((error = createCalendar((char *)filepath, &cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "Could not read in calendar from the file in order to modify it");
+	}
+	printf("Successfully called createCalendar()\n");
+
+	if ((error = validateCalendar(cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "Calendar file contains data that is invalid or wrong");
+	}
+	printf("Successfully called validateCalendar()\n");
+
+	if ((toAdd = JSONtoEvent(eventJSON)) == NULL) {
+		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not properly convert Event JSON into Event object");
+	}
+	printf("Successfully called JSONtoEvent()\n");
+
+	addEvent(cal, toAdd);
+
+	if ((error = validateCalendar(cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "The Event that was added to the Calendar made it invalid; the added Event was invalid");
+	}
+	printf("Successfully called validateCalendar() after adding the new Event\n");
+
+	if ((error = writeCalendar((char *)filepath, cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "Could not re-write the new Calendar back to its file; changes may have only partially gone through, or not at all");
+	}
+	printf("Successfully called writeCalendar()\n");
+
+	if ((toReturn = calendarToJSON(cal)) == NULL) {
+		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not convert the new Calendar back into a JSON");
+	}
+
+	deleteCalendar(cal);
+	printf("Successfully called deleteCalendar()\n");
+
+	return toReturn;
+}
+
+// Writes the Calendar JSON to the file path
+char *writeCalFromJSON(const char filepath[], const char *calJSON, const char *evtJSON) {
+	ICalErrorCode error;
+	Calendar *cal;
+	Event *event;
+	char *toReturn;
+
+	if ((cal = JSONtoCalendar(calJSON)) == NULL) {
+		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not properly convert Calendar JSON into Calendar object");
+	}
+
+	if ((error = validateCalendar(cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "Calendar file contains data that is invalid or wrong");
+	}
+
+	if ((event = JSONtoEvent(evtJSON)) == NULL) {
+		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not properly convert Event JSON into Event object");
+	}
+
+	addEvent(cal, event);
+
+	if ((error = validateCalendar(cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "The Event that was added to the Calendar made it invalid; the added Event was invalid");
+	}
+
+	if ((error = writeCalendar((char *)filepath, cal)) != OK) {
+		return ferrorCodeToJSON(error, filepath, "Could not write the created Calendar back to the file path; changes may have only partially gone through, or not at all");
+	}
+
+	if ((toReturn = calendarToJSON(cal)) == NULL) {
+		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not convert the new Calendar back into a JSON");
+	}
+
 	deleteCalendar(cal);
 
 	return toReturn;

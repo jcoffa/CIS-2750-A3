@@ -106,5 +106,5 @@ memoryjson:
 
 # removes all .o and .so files
 clean:
-	rm -f -r $(OUT)/*.o $(OUT)/*.so AJAX ../libajaxstub.so
+	rm -f -r $(OUT)/*.o $(OUT)/*.so AJAX ../libajaxstub.so ../libcalendar.so
 

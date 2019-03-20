@@ -82,12 +82,14 @@ app.get('/uploadsContents', function(req, res) {
 
 // Real callbacks getting fake data from a C shared library using ffi
 let lib = ffi.Library('./libcalendar', {
-    'fakeDT': ['string', []],
-    'fakeAlarm': ['string', []],
-    'fakeEvent': ['string', []],
-    'fakeCal': ['string', []],
-    'fakeProperty': ['string', []],
-    'createCalendarJSON' : ['string', ['string']],
+    'fakeDT'                : ['string', []],
+    'fakeAlarm'             : ['string', []],
+    'fakeEvent'             : ['string', []],
+    'fakeCal'               : ['string', []],
+    'fakeProperty'          : ['string', []],
+    'createCalendarJSON'    : ['string', ['string']],   // filename
+    'addEventJSON'          : ['string', ['string', 'string']], // filename, Event JSON string
+    'writeCalFromJSON'      : ['string', ['string', 'string', 'string']],   // filename, Calendar JSON string, Event JSON string
 });
 
 app.get('/getFakeDT', function(req, res) {
@@ -131,19 +133,18 @@ app.get('/getCal/:name', function(req, res) {
     console.log('\nCreating calendar from "' + path + '"');
     var retStr = lib.createCalendarJSON(path);
 
-    console.log('retStr = "' + retStr + '"');
-
     try {
         var obj = JSON.parse(retStr);
     } catch (e) {
-        return res.status(500).send(e);
+        console.log('Fatal error in JSON.parse(): the JSON that broke it: ' + retStr);
+        return res.status(500).send(e.message);
     }
     var toReturn;
 
     if (obj.error != undefined) {
         // An error occurred
         toReturn = obj;
-        console.log('Error occurred when creating calendar from "' + path + '": ' + toReturn.error);
+        console.log('Error occurred when creating calendar from "' + path + '": ' + toReturn.error + '; ' + toReturn.message);
     } else {
         // Calendar was created successfully
         console.log('Successfully created calendar from "' + path + '"');
@@ -156,19 +157,45 @@ app.get('/getCal/:name', function(req, res) {
     res.send(toReturn);
 });
 
-/*
-app.get('/writeCalendar', function (req, res) {
-    var calStr = calparser.createCalFileFromJSON(req.cal, req.evt, req.startDT, req.createDT, req.file);
-    res.send(JSON.parse(calStr));
-});
-*/
+//Given a file name, and an Event JSON, adds the Event provided by the JSON
+//to the specified calendar file
+app.get('/addEvent', function(req, res) {
+    console.log('\nraw req.query: ' + JSON.stringify(req.query));
+    console.log('\nfilename: ' + req.query.filename);
+    console.log('\nevt: ' + req.query.evt);
+    if (req.query.filename == undefined && req.query.evt == undefined) {
+        return res.status(400).send('No parameters given');
+    } else if (req.query.filename == undefined) {
+        return res.status(400).send('Missing filename parameter');
+    } else if (req.query.evt == undefined) {
+        return res.status(400).send('Missing evt (Event object) parameter');
+    }
 
-//Sample endpoint
-app.get('/someendpoint', function(req , res){
-  res.send({
-    foo: "bar"
-  });
+    var newCalJSON = lib.addEventJSON(__dirname + '/uploads/' + req.query.filename, req.query.evt);
+
+    console.log('\n/addEvent/: Received calendar JSON (with a new event): "' + newCalJSON + '"');
+
+    res.send(newCalJSON);
 });
+
+// Writes the given Calendar JSON object to the provided file path
+app.get('/writeCalendarJSON', function(req, res) {
+    console.log('\nraw req.query: ' + JSON.stringify(req.query));
+    if (req.query.filename == undefined && req.query.cal == undefined && req.query.evt == undefined) {
+        return res.status(400).send('No parameters given');
+    } else if (req.query.filename == undefined) {
+        return res.status(400).send('Missing filename parameter');
+    } else if (req.query.cal == undefined) {
+        return res.status(400).send('Missing cal (Calendar object) parameter');
+    } else if (req.query.evt == undefined) {
+        return res.status(400).send('Missing evt (Event object) parameter');
+    }
+
+    var newCalJSON = lib.writeCalFromJSON(__dirname + '/uploads/' + req.query.filename, req.query.cal, req.query.evt);
+
+    res.send(newCalJSON);
+});
+
 
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);

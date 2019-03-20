@@ -101,7 +101,7 @@ function addCalendarToTable(filename, calendar) {
 
     // If a row with the fame filename was found, then it is a re-upload
     if (prevRow.length !== 0) {
-        statusMsg('Re-uploading the file "' + filename + '"');
+        statusMsg('Re-uploaded the file "' + filename + '"');
 
         // Replace row in File Log Panel
         prevRow.replaceWith(markup);
@@ -119,8 +119,8 @@ function addCalendarToFileSelector(filename, calendar) {
     $(option).data('obj', calendar);
 
     // Check for duplicate file re-uploading
-    var prevOption = $('#fileSelector').filter(function() {
-        return $(this).text() == filename;
+    var prevOption = $('#fileSelector option').filter(function() {
+        return $(this).val() == filename;
     });
 
     // If an option with the same filename was found, then it is a re-upload
@@ -175,37 +175,33 @@ function getFormData(form) {
     return formData;
 }
 
+// Outputs a reasonable error message to the Status Panel
+function errorMsg(message, error) {
+    statusMsg('\n[ERROR] ' + message + '; Error message: ' + error.responseText + ' (' + error.status + ': ' + error.statusText + ')');
+}
+
 function loadFile(file) {
     $.ajax({
-        type: 'get',
-        dataType: 'json',
-        url: '/getCal/' + file.name,
+        type: "GET",
+        dataType: "json",
+        url: "/getCal/" + file.name,
         success: function(cal) {
             // In this case, 'success' just means the callback itself didn't encounter
             // an error; the function itself could have still failed.
-            // Error code JSON's have the format, for example {"error":"Invalid Alarm","filename":"..."}
+            // Error code JSON's have the format of {"error":"Error code","filename":"file name"},
+            // for example {"error":"Invalid Alarm","filename":"testCalendar5.ics"}
 
-
-            // All of this is good, and is staying
             if (cal.error != undefined) {
+                // XXX the assignment description has been updated. Now, invalid files are ignored.
                 statusMsg('Error when trying to create calendar from "' + cal.filename + '": ' + cal.error);
-
-                // On an error, only the File name and Product ID columns are filled,
-                // and the Product Id column only says 'invalid file'
-                addCalendarToTable(cal.filename, {
-                    'version': '',
-                    'prodID': 'invalid file',
-                    'numProps': '',
-                    'numEvents': ''
-                });
             } else {
                 statusMsg('Loaded "' + cal.filename + '" successfully');
                 addCalendarToTable(cal.filename, cal.obj);
                 addCalendarToFileSelector(cal.filename, cal.obj);
             }
         },
-        fail: function(error) {
-            statusMsg(error);
+        error: function(error) {
+            errorMsg('Encountered fatal error when attempting to load the file "' + file.name + '"', error);
         }
     });
 }
@@ -227,6 +223,73 @@ function formHasAllRequired(formID) {
     return allRequired;
 }
 
+// Converts a date string ("YYYY-MM-DD") and time string ("HH:MM") into a DateTime object
+// in JSON format, to be used in the C backend
+function dtStrToJSON(date, time, isUTC) {
+    var toReturn = {};
+
+    var dateToAdd = date.slice(0,4) + date.slice(5, 7) + date.slice(8);
+    var timeToAdd = time.slice(0, 2) + time.slice(3) + '00' + (isUTC ? 'Z' : '');
+
+    toReturn.date = dateToAdd;
+    toReturn.time = timeToAdd;
+    toReturn.isUTC = isUTC;
+
+    return toReturn;
+}
+
+// Pads the string "str" with up to "num" 0's
+function padNumStr(str, num) {
+    var zeros = '';
+    for (var i = 0; i < num; i++) {
+        zeros += '0';
+    }
+
+    return (zeros + str).slice(-num);
+}
+
+// Creates an Event JSON from form data
+function createEvent(formData) {
+    var today = new Date();
+
+    var dtStart = dtStrToJSON(formData.startDate, formData.startTime, formData.utc === 'on');
+
+    var dtStamp = {
+        "date": '' + padNumStr(today.getFullYear(), 4) + padNumStr(today.getMonth() + 1, 2) + padNumStr(today.getDate(), 2),
+        "time": '' + padNumStr(today.getHours(), 2) + padNumStr(today.getMinutes(), 2) + padNumStr(today.getSeconds(), 2),
+        "isUTC": false
+    };
+
+    // Construct the Event JSON
+    var toReturn = {
+        "startDT": dtStart,
+        "createDT": dtStamp,
+        "UID": "NULL",  // To be filled in by the backend
+        "numProps": (formData.summary == undefined ? 3 : 4),
+        "numAlarms": 0,
+        "summary": (formData.summary == undefined ? "NULL" : formData.summary),
+        "properties": [],
+        "alarms": []
+    };
+
+    return toReturn;
+}
+
+// Creates a Calendar JSON from form data
+function createCalendar(formData) {
+    var toReturn = {
+        "version": 2,
+        "prodID": (formData.productID == undefined || formData.productID == "") ? "-//Joseph Coffa/CIS*2750 iCalendar File Manager V1.0//EN" : formData.productID,
+        "numProps": 2,
+        "numEvents": 1,
+        "properties": [],
+        "events": []
+    };
+
+    return toReturn;
+}
+
+
 
 
 
@@ -239,16 +302,17 @@ $(document).ready(function() {
      * Load all files in /uploads *
      ******************************/
     $.ajax({
-        type: 'get',
-        url: '/uploadsContents',
-        dataType: 'json',
+        type: "GET",
+        url: "/uploadsContents",
+        dataType: "json",
         success: function(files) {
             for (var file of files) {
                 // Get a JSON of the calendar, and add it to the necessary HTML elements
-                loadFile({'name': file});
+                loadFile({"name": file});
             }
-        }, fail: function(error) {
-            statusMsg('Encountered an error while loading saved .ics files: ' + error);
+            statusMsg('Finished trying to load all saved .ics files');
+        }, error: function(error) {
+            errorMsg('Encountered a fatal error while loading saved .ics files', error);
         }
     }); 
 
@@ -278,12 +342,13 @@ $(document).ready(function() {
         // This statement overrides that lets us make an AJAX request and do other things
         // if we want.
         e.preventDefault();
+        $(this).blur();
 
         // AJAX request
         $.ajax({
-            url: '/upload',
-            type: 'post',
-            data: new FormData($('#uploadForm')[0]),
+            url: "/upload",
+            type: "POST",
+            data: new FormData($("#uploadForm")[0]),
             cache: false,
             contentType: false,
             processData: false,
@@ -296,8 +361,8 @@ $(document).ready(function() {
                 // so they do not need to be handled here.
                 loadFile(file);
             },
-            fail: function(error) {
-                statusMsg('Encountered error when attempting to upload a file: ' + error);
+            error: function(error) {
+                errorMsg('Encountered a fatal error when attempting to upload the file "' + file.name + '"', error);
             }
         });
     });
@@ -338,9 +403,11 @@ $(document).ready(function() {
     
     // Create New Calendar
     $('#createCalendarButton').click(function() {
+        $(this).blur();
         $('#createCalendarModal').css("display", "block");
     });
     $('#closeModalCalendar').click(function() {
+        $(this).blur();
         $('#createCalendarModal').css("display", "none");
         $('#calendarForm').trigger('reset');
     });
@@ -348,6 +415,7 @@ $(document).ready(function() {
     // Submit the Calendar created in the Create New Calendar modal
     $('#submitCalendar').click(function(e) {
         e.preventDefault();
+        $(this).blur();
 
         if (!formHasAllRequired('calendarForm')) {
             return;
@@ -356,8 +424,34 @@ $(document).ready(function() {
         var formData = getFormData($('#calendarForm'));
         statusMsg('From calendarForm, got form data: "' + JSON.stringify(formData) + '"');
 
-        // TODO construct Calendar JSON and write it to /uploads with an AJAX call
-        // to the C backend
+        var calendar = createCalendar(formData);
+        var eventJ = createEvent(formData);
+
+        statusMsg("[DEBUG]: Created event: \"" + JSON.stringify(eventJ) + "\"");
+        statusMsg("[DEBUG]: Created calendar: \"" + JSON.stringify(calendar) + "\"");
+
+        $.ajax({
+            type: "GET",
+            url: "/writeCalendarJSON",
+            data: {
+                "filename": filename,
+                "cal": calendar,
+                "evt": eventJ
+            },
+            dataType: "json",
+            success: function(cal) {
+                if (cal.error != undefined) {
+                    statusMsg('Encountered an error when creating a new calendar file "' +  filename + '": ' + cal.message);
+                    return;
+                }
+                statusMsg("Successfully created a new Calendar file: \"" + filename + "\"");
+                addCalendarToTable(filename, cal);
+                addCalendarToFileSelector(filename, cal);
+            },
+            error: function(error) {
+                errorMsg('Encountered fatal error when creating a new calendar file "' + filename + '"', error);
+            }
+        });
 
         $('#closeModalCalendar').click();
     });
@@ -366,8 +460,10 @@ $(document).ready(function() {
     // Add Event to Existing Calendar
     $('#addEventButton').click(function() {
         $('#addEventModal').css("display", "block");
+        $(this).blur();
     });
     $('#closeModalEvent').click(function() {
+        $(this).blur();
         $('#addEventModal').css("display", "none");
         $('#eventForm').trigger('reset');
     });
@@ -375,16 +471,40 @@ $(document).ready(function() {
     // Submit the Event created in the Add Event To Calendar modal
     $('#submitEvent').click(function(e) {
         e.preventDefault();
+        $(this).blur();
 
         if (!formHasAllRequired('eventForm')) {
             return;
         }
 
         var formData = getFormData($('#eventForm'));
-        statusMsg('From eventForm, got form data: "' + JSON.stringify(formData) + '"');
 
-        // TODO construct Event JSON and use addEvent() from the C backend to add it
-        // to the Calendar that was selected in the Calendar View Panel
+        var eventJSON = createEvent(formData);
+        
+        var filename = $('#fileSelector').find(':selected').val();
+
+        $.ajax({
+            type: "GET",
+            url: "/addEvent",
+            data: {
+                "filename": filename,
+                "evt": eventJSON
+            },
+            dataType: "json",
+            success: function(cal) {
+                if (cal.error != undefined) {
+                    statusMsg('Encountered an error when adding an event to the saved calendar "' + filename + '": ' + cal.message);
+                    return;
+                }
+                statusMsg('Added a new Event to "' + filename + '"');
+                console.log('\n\nCalendar with new event: "' + JSON.stringify(cal) + '"');
+                addCalendarToTable(filename, cal);
+                addCalendarToFileSelector(filename, cal);
+            },
+            error: function(error) {
+                errorMsg('Encountered fatal error when adding an event to the saved calendar "' + filename + '"', error);
+            }
+        });
 
         $('#closeModalEvent').click();
     }); 
@@ -392,6 +512,7 @@ $(document).ready(function() {
 
     // Show Alarms For Selected Event
     $('#showAlarmsButton').click(function() {
+        $(this).blur();
         var selectedEvent;
 
         $('#eventBody tr td input:radio').each(function() {
@@ -412,6 +533,7 @@ $(document).ready(function() {
         $('#viewAlarmsModal').css('display', 'block');
     });
     $('#closeModalAlarms').click(function() {
+        $(this).blur();
         $('#viewAlarmsModal').css('display', 'none');
         $('#eventAlarmBody').empty();
     });
@@ -419,6 +541,7 @@ $(document).ready(function() {
 
     // Show Properties For Selected Event
     $('#showPropertiesButton').click(function() {
+        $(this).blur();
         var selectedEvent;
 
         $('#eventBody tr td input:radio').each(function() {
@@ -439,49 +562,8 @@ $(document).ready(function() {
         $('#viewPropertiesModal').css('display', 'block');
     });
     $('#closeModalProperties').click(function() {
+        $(this).blur();
         $('#viewPropertiesModal').css('display', 'none');
         $('#eventPropertyBody').empty();
-    });
-
-
-
-
-
-    /*******************************************
-     * AJAX Callbacks for Calendar data JSON's *
-     *******************************************/
-
-    // AJAX Stub : Fake DateTime
-    $('#fakeDTbutton').click(function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            type: 'get',
-            dataType: 'json',
-            url: '/getFakeDT',
-            success: function(data) {
-                statusMsg('Received DT-string JSON: ' + JSON.stringify(data));
-            },
-            fail: function(error) {
-                console.log(error);
-            }
-        });
-    });
-
-    // AJAX Stub : Fake Calendar
-    $('#fakeCalButton').click(function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            type: 'get',
-            dataType: 'json',
-            url: '/getFakeCal',
-            success: function(data) {
-                statusMsg('Received Cal-string JSON: ' + JSON.stringify(data));
-            },
-            fail: function(error) {
-                console.log(error);
-            }
-        });
     });
 });

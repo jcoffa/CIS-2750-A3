@@ -42,21 +42,32 @@
         <h1>iCalendar File Manager</h1>
         <hr>
 
-        <!-- Status panel -->
+
+
+
+
+        <!-- ============ -->
+        <!-- STATUS PANEL -->
+        <!-- ============ -->
+
         <div align="center" style="overflow-y:auto">
             <textarea id="statusText" cols="100" rows="4" name="Status Panel" placeHolder="Status Panel" readonly="readonly"></textarea>
             <button type="button" onclick="clearText('statusText');">Clear</button>
             <!--<button type="button" onclick="addText('statusText', 'new text');">Clear</button>-->
         </div>
 
-        <!-- File Log Panel -->
 
-        <!-- Download file: https://www.w3schools.com/howto/howto_html_download_link.asp -->
+
+
+
+        <!-- ============== -->
+        <!-- FILE LOG PANEL -->
+        <!-- ============== -->
+
         <hr>
+        <!-- Calendar file table -->
+        <h4><u>Saved Calendar Files</u></h4>
         <div align="center"class="scrollTableDiv">
-            <!-- Calendar file table -->
-            <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
-                 Add and remove rows in a table programatically-->
             <table id="fileLogTable" class="maxRowTable">
                 <thead>
                     <tr id="fileLogHeader">
@@ -86,24 +97,36 @@
             </form>
         </div>
 
-        <!-- Calendar View Panel -->
+
+
+
+
+        <!-- =================== -->
+        <!-- CALENDAR VIEW PANEL -->
+        <!-- =================== -->
+
         <hr>
         <div class="clearfix">
             <!-- Drop-down menu to select which file to view -->
             <div align="center">
+                <button id="createCalendarButton" style="margin:15px;" class="standOut">Create A New Calendar From Scratch</button><br>
                 <label for="fileSelector">Calendar File to View:</label>
                 <select id="fileSelector" style="margin-left:10px;width:30em"></select>
-                <button id="addEventButton">Add Event To This Calendar</button>
-                <button id="createCalendarButton">Create New Calendar</button>
+                <button id="addEventButton">Add a New Event to This Calendar</button>
             </div>
-
-            <!-- "Show Alarms" Button -->
         </div>
 
-        <!-- Table to view the events/information of the file -->
-        <!-- TODO https://www.tutorialrepublic.com/faq/how-to-add-remove-table-rows-dynamically-using-jquery.php
-             Add and remove rows in a table programatically -->
-        <div align="center" class="scrollTableDiv">
+        <!-- 'Show Alarms/Optional Properties' Buttons -->
+
+        <h4><u>Event Table for Selected Calendar File to View</u></h4>
+        <div class="clearfix">
+            <button id="showPropertiesButton" style="margin:2px;">Show Optional Properties For Selected Event</button>
+            <button id="showAlarmsButton" style="margin:2px;">Show Alarms For Selected Event</button>
+        </div>
+
+        <!-- Table of Events -->
+
+        <div align="center" class="scrollTableDiv" style="margin-bottom:20px;">
             <table id="eventTable" width="100%">
                 <thead>
                     <tr>
@@ -126,22 +149,15 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
-
-        <div class="clearfix">
-            <div>
-                <form id="eventNo">
-                    <button type="button" id="showAlarmsButton" style="float:left">Show Alarms For Event</button>
-                    <button type="button" id="showPropertiesButton" style="float:left">Show Optional Properties For Event</button>
-                </form>
-            </div>
-        </div>
+        </div> 
 
 
 
 
+
+        <!-- ====== -->
         <!-- MODALS -->
-        <!-- HOWTO: https://www.w3schools.com/howto/howto_css_modals.asp -->
+        <!-- ====== -->
 
         <!-- 'Add Event to Current Calendar' Modal -->
         <div id="addEventModal" class="modal">
@@ -155,12 +171,12 @@
                     <form id="eventForm">
                         <label for="eventStartDate">Start Date: </label>
                         <input type="date" id="eventStartDate" name="startDate" required></input><b>*</b><br>
-                        <label for="eventCreateDate">Creation Date: </label>
-                        <input type="date" id="eventCreateDate" name="creationDate" required></input><b>*</b><br>
                         <label for="eventStartTime">Start Time: </label>
-                        <input type="time" id="eventStartTime" name="startTime" required></input><b>*</b><br>
+                        <input type="time" id="eventStartTime" name="startTime" required></input><b>*</b>
+                        <label for="eventStartTimeUTC" style="margin-left:4em;">UTC? </label>
+                        <input type="checkbox" id="eventStartTimeUTC" name="utc"></input><br>
                         <label for="eventSummary">Summary: </label>
-                        <textarea id="eventSummary" rows="4" cols="100"></textarea>
+                        <textarea id="eventSummary" name="summary" rows="4" cols="100"></textarea>
                         <hr>
                         <input type="reset" value="Reset All Fields">
                         <button id="submitEvent">Add Event</button>
@@ -187,12 +203,12 @@
                         <h5><u>Event</u></h5>
                         <label for="calEventStartDate">Start Date: </label>
                         <input type="date" id="calEventStartDate" name="startDate" required></input><b>*</b><br>
-                        <label for="calEventCreateDate">Creation Date: </label>
-                        <input type="date" id="calEventCreateDate" name="creationDate" required></input><b>*</b><br>
                         <label for="calEventStartTime">Start Time: </label>
-                        <input type="time" id="calEventStartTime" name="startTime" required></input><b>*</b><br>
+                        <input type="time" id="calEventStartTime" name="startTime" required></input><b>*</b>
+                        <label for="calEventStartTimeUTC" style="margin-left:4em;">UTC? </label>
+                        <input type="checkbox" id="calEventStartTimeUTC" name="utc"></input><br>
                         <label for="calEventSummary">Summary: </label>
-                        <textarea id="calEventSummary" rows="4" cols="100"></textarea>
+                        <textarea id="calEventSummary" name="summary" rows="4" cols="100"></textarea>
                         <hr>
                         <input type="reset" value="Reset All Fields">
                         <button id="submitCalendar">Create Calendar</button>
@@ -209,7 +225,7 @@
                     <span id="closeModalProperties" class="close">X</span>
                 </div>
                 <div class="modal-body">
-                    <div class="scrollTableDivModal">
+                    <div class="scrollTableDiv">
                         <table width="100%">
                             <thead>
                                 <tr>
@@ -233,7 +249,7 @@
                     <span id="closeModalAlarms" class="close">X</span>
                 </div>
                 <div class="modal-body">
-                    <div class="scrollTableDivModal">
+                    <div class="scrollTableDiv">
                         <table width="100%">
                             <thead>
                                 <tr>

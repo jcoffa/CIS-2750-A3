@@ -196,12 +196,12 @@ char* eventListToJSON(const List* eventList);
 char* calendarToJSON(const Calendar* cal);
 
 // Converts an ICalErrorCode into a JSON string
-char *errorCodeToJSON(ICalErrorCode err);
+char *errorCodeToJSON(ICalErrorCode err, char message[]);
 
 // Identical to errorCodeToJSON(), except the additional field "filename":...
 // is contained in the JSON string as well. Only the part of the string after the
 // last '/' character is included in the "filename":... property.
-char *ferrorCodeToJSON(ICalErrorCode err, const char filepath[]);
+char *ferrorCodeToJSON(ICalErrorCode err, const char filepath[], char message[]);
 
 
 /****************************

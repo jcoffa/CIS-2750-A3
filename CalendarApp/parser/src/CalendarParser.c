@@ -733,6 +733,7 @@ char* eventToJSON(const Event* event) {
 		free(temp);
 
 		char *startDT = dtToJSON(event->startDateTime);
+		char *createDT = dtToJSON(event->creationDateTime);
 
 		// Create a dummy property to find the "SUMMARY" property in 'event', if it exists
 		Property *dummy = malloc(sizeof(Property));
@@ -747,12 +748,12 @@ char* eventToJSON(const Event* event) {
 		// Allocate memory depending on whether a SUMMARY property needs to be written
 		int lenProps = strlen(propListJ);
 		int lenAlarms = strlen(alarmListJ);
-		int size = (summary == NULL) ? 500+lenProps+lenAlarms : strlen(summary->propDescr) + 500+lenProps+lenAlarms;
+		int size = (summary == NULL) ? 600+lenProps+lenAlarms : strlen(summary->propDescr) + 600+lenProps+lenAlarms;
 		toReturn = malloc(size);
 
 		// Write the JSON in toReturn
-		written = snprintf(toReturn, size, "{\"startDT\":%s,\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\",\"properties\":%s,\"alarms\":%s}", \
-		                   startDT, getLength(event->properties)+3, getLength(event->alarms), \
+		written = snprintf(toReturn, size, "{\"startDT\":%s,\"createDT\":%s,\"UID\":\"%s\",\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\",\"properties\":%s,\"alarms\":%s}", \
+		                   startDT, createDT, event->UID, getLength(event->properties)+3, getLength(event->alarms), \
 		                   // findElement returns NULL if the property could not be found in 'event',
 		                   // in which case an empty string is written instead of the summary properties description
 		                   (summary == NULL) ? "" : summary->propDescr, \
@@ -861,11 +862,11 @@ char* calendarToJSON(const Calendar* cal) {
 }
 
 // Converts an ICalErrorCode into a JSON string
-char *errorCodeToJSON(ICalErrorCode err) {
-	char *toReturn = malloc(100);
+char *errorCodeToJSON(ICalErrorCode err, char message[]) {
+	char *toReturn = malloc(500);
 	char *errorStr = printError(err);
 
-	int written = snprintf(toReturn, 100, "{\"error\":\"%s\"}", errorStr);
+	int written = snprintf(toReturn, 500, "{\"error\":\"%s\",\"message\":\"%s\"}", errorStr, (message == NULL) ? "" : message);
 
 	return realloc(toReturn, written + 1);
 }
@@ -873,8 +874,8 @@ char *errorCodeToJSON(ICalErrorCode err) {
 // Identical to errorCodeToJSON(), except the additional field "filename":...
 // is contained in the JSON string as well. Only the part of the string after the
 // last '/' character is included in the "filename":... property.
-char *ferrorCodeToJSON(ICalErrorCode err, const char filepath[]) {
-	char *toReturn = malloc(500);
+char *ferrorCodeToJSON(ICalErrorCode err, const char filepath[], char message[]) {
+	char *toReturn = malloc(1000);
 	char *errorStr = printError(err);
 
 	char *justFileName = strrchr(filepath, '/');
@@ -885,7 +886,7 @@ char *ferrorCodeToJSON(ICalErrorCode err, const char filepath[]) {
 		justFileName += 1;
 	}
 
-	int written = snprintf(toReturn, 500, "{\"error\":\"%s\",\"filename\":\"%s\"}", errorStr, justFileName);
+	int written = snprintf(toReturn, 1000, "{\"error\":\"%s\",\"filename\":\"%s\",\"message\":\"%s\"}", errorStr, justFileName, (message == NULL) ? errorStr : message);
 
 	return realloc(toReturn, written + 1);
 }
@@ -931,7 +932,7 @@ DateTime JSONtoDT(const char *str) {
 	}
 
 	char *temp = printDate(&toReturn);
-	debugMsg("\tCreated DateTime: \"%s\"", temp);
+	debugMsg("\tCreated DateTime: \"%s\"\n", temp);
 	free(temp);
 
 	return toReturn;
@@ -1028,12 +1029,56 @@ Event* JSONtoEvent(const char* str) {
 		return NULL;
 	}
 
+	char startDT[100] = "", createDT[100] = "", summary[2000] = "", uid[1000] = "";
+	int dummy1=-1, dummy2=-1;
+
+
+	//snprintf(toReturn, size, "{\"startDT\":%s,\"createDT\":\"%s\",\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%s\",\"properties\":%s,\"alarms\":%s}",
+
 	// The JSON string 'str' contains only a "UID" field
-	if (sscanf(str, "{\"UID\":\"%999[^\"]\"}", toReturn->UID) < 1) {
+	//if (sscanf(str, "{\"UID\":\"%999[^\"]\"}", toReturn->UID) < 1) {
+	if (sscanf(str, "{\"startDT\":%100[^}]},\"createDT\":%100[^}]},\"UID\":\"%999[^\"]\",\"numProps\":%d,\"numAlarms\":%d,\"summary\":\"%1999[^\"]\",\"properties\":[],\"alarms\":[]}", \
+	           startDT, createDT, uid, &dummy1, &dummy2, summary) < 5) {
 		errorMsg("\tCould not correctly parse the JSON string, returning NULL\n");
 		deleteEvent(toReturn);
 		return NULL;
 	}
+
+	strcat(startDT, "}");
+	strcat(createDT, "}");
+	printf("startDT: \"%s\"\n", startDT);
+	printf("createDT: \"%s\"\n", createDT);
+	printf("UID: \"%s\"\n", uid);
+	printf("numProps: %d\n", dummy1);
+	printf("numAlarms: %d\n", dummy2);
+	printf("summary: \"%s\"\n", summary);
+
+	// A flag that indicates a UID was not provided
+	// (sscanf doesn't play nice with matching empty strings)
+	if (strcmp(uid, "NULL") == 0) {
+		char randUID[50];
+		snprintf(randUID, 50, "%d", rand());
+		strcpy(uid, randUID);
+	}
+
+	
+
+
+	// Construct the event
+	toReturn->startDateTime = JSONtoDT(startDT);
+	toReturn->creationDateTime = JSONtoDT(createDT);
+
+	// A flag that indicates a SUMMARY was not provided
+	// (sscanf doesn't play nice with matching empty strings)
+	if (strcmp(summary, "NULL") != 0) {
+		Property *sumProp = malloc(sizeof(Property) + sizeof(char) * (strlen(summary) + 1));
+		strcpy(sumProp->propName, "SUMMARY");
+		strcpy(sumProp->propDescr, summary);
+		insertBack(toReturn->properties, sumProp);
+	}
+
+	strcpy(toReturn->UID, uid);
+
 
 	char *temp = printEvent(toReturn);
 	notifyMsg("\tSuccessfully parsed the JSON into an Event object: \"%s\"\n", temp);
@@ -1061,12 +1106,14 @@ Calendar* JSONtoCalendar(const char* str) {
 		return NULL;
 	}
 
-	// The JSON string 'str' is similar to the JSON string created by calendarToJSON(),
-	// except it lacks the list info.
-	if (sscanf(str, "{\"version\":%f,\"prodID\":\"%999[^\"]\"}", &(toReturn->version), toReturn->prodID) < 2) {
+	int dummy1, dummy2;
+
+	if (sscanf(str, "{\"version\":%f,\"prodID\":\"%999[^\"]\",\"numProps\":%d,\"numEvents\":%d,\"properties\":[],\"events\":[]}", \
+	    &(toReturn->version), toReturn->prodID, &dummy1, &dummy2) < 4) {
 		errorMsg("\tUnable to parse the JSON for some reason. Returning NULL\n");
 		return NULL;
 	}
+
 
 	debugMsg("\tSuccessfully created a Calendar object\n");
 	debugMsg("\t-----END JSONtoCalendar()-----\n");

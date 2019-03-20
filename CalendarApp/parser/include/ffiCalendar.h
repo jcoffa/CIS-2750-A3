@@ -28,6 +28,7 @@
 #include <time.h>
 
 #include "CalendarParser.h"
+#include "CalendarHelper.h"
 
 /****************************
  * Stub AJAX Call Functions *
@@ -58,9 +59,12 @@ char *fakeCal();
 // Takes a filename and returns a JSON string of a Calendar object, or an error code on a fail.
 char *createCalendarJSON(const char filepath[]);
 
-// Takes a calendar JSON, an event JSON, two datetime JSON's, and a filename.
-// Returns a string representing the exit status (ICalErrorCode)
-char *createCalFileFromJSON(char *calJSON, char *eventJSON, char *startJSON, char *createJSON, \
-		                    char *filename);
+// Takes a filename and an Event JSON. Adds the Event to the Calendar created from the filename,
+// then overwrites the file with the new Calendar containing its shiny new event.
+// Returns the JSON of the new calendar.
+char *addEventJSON(const char filepath[], const char *eventJSON);
+
+// Writes the Calendar JSON to the file path
+char *writeCalFromJSON(const char filepath[], const char *calJSON, const char *evtJSON);
 
 #endif

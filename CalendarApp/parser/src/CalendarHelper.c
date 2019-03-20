@@ -345,12 +345,12 @@ ICalErrorCode validateEvents(List *events) {
 
 		// a check to fail faster in the case where the highest priority error has already been reached
 		if (highestPriority == INV_EVENT) {
-			debugMsg("\t\tReturning INV_EVENT\n");
+			errorMsg("\t\tCurrent error is INV_EVENT: Function can terminate early\n");
 			return INV_EVENT;
 		}
 	}
 
-	successMsg("\t\t-----END validateEvents()-----\n");
+	notifyMsg("\t\t-----END validateEvents()-----\n");
 	return highestPriority;
 }
 
@@ -425,13 +425,12 @@ ICalErrorCode validateAlarms(List *alarms) {
 
 		// a check to fail faster in the case where the highest priority error has already been reached
 		if (highestPriority == INV_ALARM) {
-			debugMsg("\t\t\tReturning INV_ALARM\n");
+			errorMsg("\t\t\tCurrent error is INV_ALARM: Function can terminate early\n");
 			return INV_ALARM;
 		}
 	}
 	
-	successMsg("\t\t\t-----END validateAlarms()-----\n");
-
+	notifyMsg("\t\t\t-----END validateAlarms()-----\n");
 	return highestPriority;
 }
 
@@ -474,6 +473,7 @@ ICalErrorCode validatePropertiesCal(List *properties) {
 		switch (equalsOneOfStr(prop->propName, NUM_CALPROPNAMES, calPropNames)) {
 			case -1:
 				// the property name did not match any valid Calendar property names
+				errorMsg("\t\tfound non-valid propName: \"%s\"\n", prop->propName);
 				return INV_CAL;
 
 			case 0:
@@ -498,7 +498,7 @@ ICalErrorCode validatePropertiesCal(List *properties) {
 			case 3:
 				// This should never happen for a valid calendar: Calendar structs have a unique
 				// variable to store the PRODID and it should never be in the property list.
-				debugMsg("\t\tValidate PRODID or VERSION\n");
+				errorMsg("\t\tFound a PRODID or VERSION property inside the Property List\n");
 				return INV_CAL;
 		}
 	}
@@ -552,23 +552,23 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 		switch (equalsOneOfStr(prop->propName, NUM_EVENTPROPNAMES, eventPropNames)) {
 			case -1:
 				// the property name did not match any valid Event property names
+				errorMsg("\t\t\tfound non-valid propName: \"%s\"\n", prop->propName);
 				return INV_EVENT;
-				break;
 
 			case 0:
-				debugMsg("\t\t\tValidate ATTACH\n");
+				debugMsg("\t\t\tATTACH\n");
 				break;
 
 			case 1:
-				debugMsg("\t\t\tValidate ATTENDEE\n");
+				debugMsg("\t\t\tATTENDEE\n");
 				break;
 
 			case 2:
-				debugMsg("\t\t\tValidate CATEGORIES\n");
+				debugMsg("\t\t\tCATEGORIES\n");
 				break;
 
 			case 3:
-				debugMsg("\t\t\tValidate CLASS\n");
+				debugMsg("\t\t\tCLASS\n");
 				if (class) {
 					errorMsg("\t\t\tDuplicate CLASS\n");
 					return INV_EVENT;
@@ -577,15 +577,15 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 4:
-				debugMsg("\t\t\tValidate COMMENT\n");
+				debugMsg("\t\t\tCOMMENT\n");
 				break;
 
 			case 5:
-				debugMsg("\t\t\tValidate CONTACT\n");
+				debugMsg("\t\t\tCONTACT\n");
 				break;
 
 			case 6:
-				debugMsg("\t\t\tValidate CREATED\n");
+				debugMsg("\t\t\tCREATED\n");
 				if (created) {
 					errorMsg("\t\t\tDuplicate CREATED\n");
 					return INV_EVENT;
@@ -594,7 +594,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 7:
-				debugMsg("\t\t\tValidate DESCRIPTION\n");
+				debugMsg("\t\t\tDESCRIPTION\n");
 				if (description) {
 					errorMsg("\t\t\tDuplicate DESCRIPTION\n");
 					return INV_EVENT;
@@ -603,7 +603,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 8:
-				debugMsg("\t\t\tValidate DTEND\n");
+				debugMsg("\t\t\tDTEND\n");
 				if (dtend || duration) {
 					errorMsg("\t\t\tDuplicate DTEND, or DURATION is present\n");
 					return INV_EVENT;
@@ -615,20 +615,18 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				// This property is already accounted for in the Event structure definition.
 				// If it showss up in the property List, then something has gone wrong
 				// in createCalendar() as this error should have been caught there.
-				debugMsg("\t\t\tValidate DTSTAMP\n");
 				errorMsg("\t\t\tDTSTAMP found in property List\n");
 				return INV_EVENT;
 
 			case 10:
 				// This property is already accounted for in the Event structure definition.
-				// If it showss up in the property List, then something has gone wrong
+				// If it shows up in the property List, then something has gone wrong
 				// in createCalendar() as this error should have been caught there.
-				debugMsg("\t\t\tValidate DTSTART\n");
 				errorMsg("\t\t\tDTSTART found in property List\n");
 				return INV_EVENT;
 
 			case 11:
-				debugMsg("\t\t\tValidate DURATION\n");
+				debugMsg("\t\t\tDURATION\n");
 				if (dtend || duration) {
 					errorMsg("\t\t\tDuplicate DURATION, or DTEND is present\n");
 					return INV_EVENT;
@@ -637,11 +635,11 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 12:
-				debugMsg("\t\t\tValidate EXDATE\n");
+				debugMsg("\t\t\tEXDATE\n");
 				break;
 
 			case 13:
-				debugMsg("\t\t\tValidate GEO\n");
+				debugMsg("\t\t\tGEO\n");
 				if (geo) {
 					errorMsg("\t\t\tDuplicate GEO\n");
 					return INV_EVENT;
@@ -650,7 +648,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 14:
-				debugMsg("\t\t\tValidate LAST-MODIFIED\n");
+				debugMsg("\t\t\tLAST-MODIFIED\n");
 				if (last_mod) {
 					errorMsg("\t\t\tDuplicate LAST-MODIFIED\n");
 					return INV_EVENT;
@@ -659,7 +657,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 15:
-				debugMsg("\t\t\tValidate LOCATION\n");
+				debugMsg("\t\t\tLOCATION\n");
 				if (location){
 					errorMsg("\t\t\tDuplicate LOCATION\n");
 					return INV_EVENT;
@@ -668,7 +666,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 16:
-				debugMsg("\t\t\tValidate ORGANIZER\n");
+				debugMsg("\t\t\tORGANIZER\n");
 				if (organizer) {
 					errorMsg("\t\t\tDuplicate ORGANIZER\n");
 					return INV_EVENT;
@@ -677,7 +675,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 17:
-				debugMsg("\t\t\tValidate PRIORITY\n");
+				debugMsg("\t\t\tPRIORITY\n");
 				if (priority) {
 					errorMsg("\t\t\tDuplicate PRIORITY\n");
 					return INV_EVENT;
@@ -686,11 +684,11 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 18:
-				debugMsg("\t\t\tValidate RDATE\n");
+				debugMsg("\t\t\tRDATE\n");
 				break;
 
 			case 19:
-				debugMsg("\t\t\tValidate RECURRENCE-ID\n");
+				debugMsg("\t\t\tRECURRENCE-ID\n");
 				if (recurid) {
 					errorMsg("\t\t\tDuplicate RECURRENCE-ID\n");
 					return INV_EVENT;
@@ -699,19 +697,19 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 20:
-				debugMsg("\t\t\tValidate RELATED-TO\n");
+				debugMsg("\t\t\tRELATED-TO\n");
 				break;
 
 			case 21:
-				debugMsg("\t\t\tValidate RESOURCES\n");
+				debugMsg("\t\t\tRESOURCES\n");
 				break;
 
 			case 22:
-				debugMsg("\t\t\tValidate RRULE\n");
+				debugMsg("\t\t\tRRULE\n");
 				break;
 
 			case 23:
-				debugMsg("\t\t\tValidate SEQUENCE\n");
+				debugMsg("\t\t\tSEQUENCE\n");
 				if (seq) {
 					errorMsg("\t\t\tDuplicate SEQUENCE\n");
 					return INV_EVENT;
@@ -720,7 +718,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 24:
-				debugMsg("\t\t\tValidate STATUS\n");
+				debugMsg("\t\t\tSTATUS\n");
 				if (status) {
 					errorMsg("\t\t\tDuplicate STATUS\n");
 					return INV_EVENT;
@@ -729,7 +727,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 25:
-				debugMsg("\t\t\tValidate SUMMARY\n");
+				debugMsg("\t\t\tSUMMARY\n");
 				if (summary) {
 					errorMsg("\t\t\tDuplicate SUMMARY\n");
 					return INV_EVENT;
@@ -738,7 +736,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 26:
-				debugMsg("\t\t\tValidate TRANSP\n");
+				debugMsg("\t\t\tTRANSP\n");
 				if (transp) {
 					errorMsg("\t\t\tDuplicate TRANSP\n");
 					return INV_EVENT;
@@ -747,7 +745,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				break;
 
 			case 27:
-				debugMsg("\t\t\tValidate UID\n");
+				debugMsg("\t\t\tUID\n");
 				// This property is already accounted for in the Event structure definition.
 				// If it showss up in the property List, then something has gone wrong
 				// in createCalendar() as this error should have been caught there.
@@ -755,7 +753,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 				return INV_EVENT;
 
 			case 28:
-				debugMsg("\t\t\tValidate URL\n");
+				debugMsg("\t\t\tURL\n");
 				if (url) {
 					errorMsg("\t\t\tDuplicate URL\n");
 					return INV_EVENT;
@@ -765,7 +763,7 @@ ICalErrorCode validatePropertiesEv(List *properties) {
 		}
 	}
 
-	successMsg("\t\t\t-----END validatePropertiesEv()-----\n");
+	notifyMsg("\t\t\t-----END validatePropertiesEv()-----\n");
 	return OK;
 }
 
@@ -864,7 +862,7 @@ ICalErrorCode validatePropertiesAl(List *properties) {
 		return INV_ALARM;
 	}
 
-	successMsg("\t\t\t\t-----END validatePropertiesAl()-----\n");
+	notifyMsg("\t\t\t\t-----END validatePropertiesAl()-----\n");
 	return OK;
 }
 
@@ -887,7 +885,7 @@ ICalErrorCode validateDateTime(DateTime dt) {
 		}
 	}
 	if (!terminator) {
-		errorMsg("\t\t\tdate did not have a '\\0' within the first 8 characters\n");
+		errorMsg("\t\t\tdate did not have a '\\0' within the first 9 characters\n");
 		return INV_DT;
 	}
 
@@ -900,7 +898,7 @@ ICalErrorCode validateDateTime(DateTime dt) {
 		}
 	}
 	if (!terminator) {
-		errorMsg("\t\t\ttime did not have a '\\0' within the first 6 characters\n");
+		errorMsg("\t\t\ttime did not have a '\\0' within the first 7 characters\n");
 		return INV_DT;
 	}
 
@@ -920,7 +918,7 @@ ICalErrorCode validateDateTime(DateTime dt) {
 		}
 	}
 
-	successMsg("\t\t\t-----END validateDateTime()-----\n");
+	notifyMsg("\t\t\t-----END validateDateTime()-----\n");
 	return OK;
 }
 

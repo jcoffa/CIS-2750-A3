@@ -70,12 +70,8 @@ thead {
 /* Vertically scrolling tables */
 .scrollTableDiv {
     overflow: auto;
-    height: 210px;
-}
-/* Exactly the same as the normal scrollTableDiv, but bigger */
-.scrollTableDivModal {
-    overflow: auto;
-    height: 500px;
+    height: 400px;
+    border: 2px solid #404099;
 }
 
 /* Textareas can't be resized */
@@ -94,6 +90,23 @@ button {
     cursor: pointer;
     margin-left: 10px;
     margin-right: 10px;
+}
+button:focus {
+    background-color: #404099;
+    border-color: #202077;
+    border-style: inset;
+    outline: none;
+}
+
+/* A different button style */
+button.standOut {
+    background-color: #E3AA44;
+    border-color: #DD9933;
+    color: black;
+}
+button.standOut:focus {
+    background-color: #C18822;
+    border-color: #B07711;
 }
 
 /* Make rows of elements better */
