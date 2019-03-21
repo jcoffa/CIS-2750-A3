@@ -29,7 +29,7 @@ function addText(id, message) {
 
 // Wrapper for addText() to display to the Status Panel
 function statusMsg(text) {
-    addText('statusText', text);
+    addText('statusText', '\n' + text);
 }
 
 // Returns a string that formats the 'date' part of the given DateTime JSON object
@@ -76,7 +76,7 @@ function addEventToTable(evt) {
 // Adds a new row to the File Log Panel table, given a Calendar JSON object and a file name string.
 // If a row with the same file name exists already in the File Log Panel, it is
 // replaced with the new Calendar passed into the function.
-function addCalendarToTable(filename, calendar) {
+function addCalendarToTable(filename, calendar, printReupload=true) {
     // First, determine if the first row of the table body contains the 'No files in system' text
     var firstRowElement = $('#fileLogBody tr:eq(0) td').filter(function() {
         return $(this).text() == 'No files in system';
@@ -101,7 +101,9 @@ function addCalendarToTable(filename, calendar) {
 
     // If a row with the fame filename was found, then it is a re-upload
     if (prevRow.length !== 0) {
-        statusMsg('Re-uploaded the file "' + filename + '"');
+        if (printReupload) {
+            statusMsg('Re-uploaded the file "' + filename + '"');
+        }
 
         // Replace row in File Log Panel
         prevRow.replaceWith(markup);
@@ -193,7 +195,7 @@ function loadFile(file) {
 
             if (cal.error != undefined) {
                 // XXX the assignment description has been updated. Now, invalid files are ignored.
-                statusMsg('Error when trying to create calendar from "' + cal.filename + '": ' + cal.error);
+                statusMsg('Error when trying to create calendar from "' + cal.filename + '": ' + cal.error + ': ' + cal.message);
             } else {
                 statusMsg('Loaded "' + cal.filename + '" successfully');
                 addCalendarToTable(cal.filename, cal.obj);
@@ -229,7 +231,7 @@ function dtStrToJSON(date, time, isUTC) {
     var toReturn = {};
 
     var dateToAdd = date.slice(0,4) + date.slice(5, 7) + date.slice(8);
-    var timeToAdd = time.slice(0, 2) + time.slice(3) + '00' + (isUTC ? 'Z' : '');
+    var timeToAdd = time.slice(0, 2) + time.slice(3, 5) + '00';
 
     toReturn.date = dateToAdd;
     toReturn.time = timeToAdd;
@@ -267,7 +269,7 @@ function createEvent(formData) {
         "UID": "NULL",  // To be filled in by the backend
         "numProps": (formData.summary == undefined ? 3 : 4),
         "numAlarms": 0,
-        "summary": (formData.summary == undefined ? "NULL" : formData.summary),
+        "summary": (formData.summary == undefined || formData.summary == "" ? "NULL" : formData.summary),
         "properties": [],
         "alarms": []
     };
@@ -310,7 +312,6 @@ $(document).ready(function() {
                 // Get a JSON of the calendar, and add it to the necessary HTML elements
                 loadFile({"name": file});
             }
-            statusMsg('Finished trying to load all saved .ics files');
         }, error: function(error) {
             errorMsg('Encountered a fatal error while loading saved .ics files', error);
         }
@@ -434,28 +435,29 @@ $(document).ready(function() {
             type: "GET",
             url: "/writeCalendarJSON",
             data: {
-                "filename": filename,
-                "cal": calendar,
-                "evt": eventJ
+                "filename": formData.fileName,
+                "cal": JSON.stringify(calendar),
+                "evt": JSON.stringify(eventJ)
             },
             dataType: "json",
             success: function(cal) {
+                statusMsg('Got from /writeCalendarJSON: ' + JSON.stringify(cal));
                 if (cal.error != undefined) {
-                    statusMsg('Encountered an error when creating a new calendar file "' +  filename + '": ' + cal.message);
-                    return;
+                    statusMsg('Encountered an error when creating a new Calendar file: "' + filename + '": ' + cal.message);
+                   return;
                 }
-                statusMsg("Successfully created a new Calendar file: \"" + filename + "\"");
-                addCalendarToTable(filename, cal);
-                addCalendarToFileSelector(filename, cal);
+
+                statusMsg("Successfully created a new Calendar file: \"" + formData.fileName + "\"");
+                addCalendarToTable(formData.fileName, cal);
+                addCalendarToFileSelector(formData.fileName, cal);
             },
             error: function(error) {
-                errorMsg('Encountered fatal error when creating a new calendar file "' + filename + '"', error);
+                errorMsg('Encountered fatal error when creating a new calendar: "' + filename + '"', error);
             }
         });
 
         $('#closeModalCalendar').click();
     });
-
 
     // Add Event to Existing Calendar
     $('#addEventButton').click(function() {
@@ -488,7 +490,7 @@ $(document).ready(function() {
             url: "/addEvent",
             data: {
                 "filename": filename,
-                "evt": eventJSON
+                "evt": JSON.stringify(eventJSON)
             },
             dataType: "json",
             success: function(cal) {
@@ -498,7 +500,7 @@ $(document).ready(function() {
                 }
                 statusMsg('Added a new Event to "' + filename + '"');
                 console.log('\n\nCalendar with new event: "' + JSON.stringify(cal) + '"');
-                addCalendarToTable(filename, cal);
+                addCalendarToTable(filename, cal, false);
                 addCalendarToFileSelector(filename, cal);
             },
             error: function(error) {

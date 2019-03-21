@@ -162,7 +162,9 @@ app.get('/getCal/:name', function(req, res) {
 app.get('/addEvent', function(req, res) {
     console.log('\nraw req.query: ' + JSON.stringify(req.query));
     console.log('\nfilename: ' + req.query.filename);
+    //console.log('\nevt: ' + JSON.stringify(req.query.evt));
     console.log('\nevt: ' + req.query.evt);
+
     if (req.query.filename == undefined && req.query.evt == undefined) {
         return res.status(400).send('No parameters given');
     } else if (req.query.filename == undefined) {
@@ -173,7 +175,7 @@ app.get('/addEvent', function(req, res) {
 
     var newCalJSON = lib.addEventJSON(__dirname + '/uploads/' + req.query.filename, req.query.evt);
 
-    console.log('\n/addEvent/: Received calendar JSON (with a new event): "' + newCalJSON + '"');
+    console.log('\n/addEvent: Received calendar JSON (with a new event): "' + newCalJSON + '"');
 
     res.send(newCalJSON);
 });
@@ -181,6 +183,12 @@ app.get('/addEvent', function(req, res) {
 // Writes the given Calendar JSON object to the provided file path
 app.get('/writeCalendarJSON', function(req, res) {
     console.log('\nraw req.query: ' + JSON.stringify(req.query));
+    console.log('\nfilename: ' + req.query.filename);
+    //console.log('\ncal: ' + JSON.stringify(req.query.cal));
+    //console.log('\nevt: ' + JSON.stringify(req.query.evt));
+    console.log('\ncal: ' + req.query.cal);
+    console.log('\nevt: ' + req.query.evt);
+
     if (req.query.filename == undefined && req.query.cal == undefined && req.query.evt == undefined) {
         return res.status(400).send('No parameters given');
     } else if (req.query.filename == undefined) {
@@ -191,7 +199,10 @@ app.get('/writeCalendarJSON', function(req, res) {
         return res.status(400).send('Missing evt (Event object) parameter');
     }
 
+    //var newCalJSON = lib.writeCalFromJSON(__dirname + '/uploads/' + req.query.filename, JSON.stringify(req.query.cal), JSON.stringify(req.query.evt));
     var newCalJSON = lib.writeCalFromJSON(__dirname + '/uploads/' + req.query.filename, req.query.cal, req.query.evt);
+
+    console.log('\n/writeCalendarJSON: returned ' + newCalJSON);
 
     res.send(newCalJSON);
 });
