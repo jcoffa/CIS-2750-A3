@@ -78,9 +78,16 @@ AJAX: ajaxmain.c libcalendar.so
 JSON: testJSON.c libcalendar.so
 	$(CC) $(CFLAGS) -L.. -lcalendar $< -o JSON
 
+FFI: ffiTest.c libcalendar.so
+	$(CC) $(CFLAGS) -L.. -lcalendar $< -o FFI
+
 #############
 # Utilities #
 #############
+
+runffi:
+	$(MAKE) FFI
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./FFI
 
 runajax:
 	$(MAKE) AJAX
