@@ -7,4 +7,6 @@ CalendarApp/uploads/*
 CalendarApp/parser/AJAX
 CalendarApp/parser/bin/
 CalendarApp/parser/JSON
+CalendarApp/parser/FFI
 *.so
+Testing
