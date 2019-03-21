@@ -363,10 +363,6 @@ char *writeCalFromJSON(const char filepath[], const char *calJSON, const char *e
 		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not properly convert Calendar JSON into Calendar object");
 	}
 
-	if ((error = validateCalendar(cal)) != OK) {
-		return ferrorCodeToJSON(error, filepath, "Calendar file contains data that is invalid or wrong");
-	}
-
 	if ((event = JSONtoEvent(evtJSON)) == NULL) {
 		return ferrorCodeToJSON(OTHER_ERROR, filepath, "Could not properly convert Event JSON into Event object");
 	}
@@ -374,7 +370,7 @@ char *writeCalFromJSON(const char filepath[], const char *calJSON, const char *e
 	addEvent(cal, event);
 
 	if ((error = validateCalendar(cal)) != OK) {
-		return ferrorCodeToJSON(error, filepath, "The Event that was added to the Calendar made it invalid; the added Event was invalid");
+		return ferrorCodeToJSON(error, filepath, "Calendar file contains data that is invalid or wrong");
 	}
 
 	if ((error = writeCalendar((char *)filepath, cal)) != OK) {
