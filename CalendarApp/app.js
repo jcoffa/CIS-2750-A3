@@ -13,7 +13,7 @@ app.use(fileUpload());
 
 // Minimization
 const fs = require('fs');
-const JavaScriptObfuscator = require('javascript-obfuscator');
+//const JavaScriptObfuscator = require('javascript-obfuscator');    // TODO reenable
 
 // Important, pass in port as in `npm run dev 1234`, do not change
 const portNum = process.argv[2];
@@ -32,9 +32,13 @@ app.get('/style.css',function(req,res){
 // Send obfuscated JS, do not change
 app.get('/index.js',function(req,res){
   fs.readFile(path.join(__dirname+'/public/index.js'), 'utf8', function(err, contents) {
+    // TODO reenable
+    /*
     const minimizedContents = JavaScriptObfuscator.obfuscate(contents, {compact: true, controlFlowFlattening: true});
     res.contentType('application/javascript');
     res.send(minimizedContents._obfuscatedCode);
+    */
+    res.send(contents);
   });
 });
 
@@ -80,13 +84,8 @@ app.get('/uploadsContents', function(req, res) {
 });
 
 
-// Real callbacks getting fake data from a C shared library using ffi
+// FFI library to use the backend written in C
 let lib = ffi.Library('./libcalendar', {
-    'fakeDT'                : ['string', []],
-    'fakeAlarm'             : ['string', []],
-    'fakeEvent'             : ['string', []],
-    'fakeCal'               : ['string', []],
-    'fakeProperty'          : ['string', []],
     'createCalendarJSON'    : ['string', ['string']],   // filename
     'addEventJSON'          : ['string', ['string', 'string']], // filename, Event JSON string
     'writeCalFromJSON'      : ['string', ['string', 'string', 'string']],   // filename, Calendar JSON string, Event JSON string
