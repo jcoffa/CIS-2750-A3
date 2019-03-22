@@ -28,8 +28,12 @@ function addText(id, message) {
 }
 
 // Wrapper for addText() to display to the Status Panel
-function statusMsg(text) {
-    addText('statusText', '\n' + text);
+function statusMsg(text, newline=false) {
+    if (newline) {
+        addText('statusText', '\n' + text);
+    } else {
+        addText('statusText', text);
+    }
 }
 
 // Returns a string that formats the 'date' part of the given DateTime JSON object
@@ -37,11 +41,11 @@ function statusMsg(text) {
 function formatDate(dt) {
     var toReturn = "";
 
-    toReturn += dt.date.slice(0, 4);
+    toReturn += dt.date.slice(0, 4);    // Year
     toReturn += '/';
-    toReturn += dt.date.slice(4, 6);
+    toReturn += dt.date.slice(4, 6);    // Month
     toReturn += '/';
-    toReturn += dt.date.slice(6);
+    toReturn += dt.date.slice(6);       // Day
 
     return toReturn;
 }
@@ -51,14 +55,14 @@ function formatDate(dt) {
 function formatTime(dt) {
     var toReturn = "";
 
-    toReturn += dt.time.slice(0, 2);
+    toReturn += dt.time.slice(0, 2);    // Hour
     toReturn += ':';
-    toReturn += dt.time.slice(2, 4);
+    toReturn += dt.time.slice(2, 4);    // Minute
     toReturn += ':';
-    toReturn += dt.time.slice(4);
+    toReturn += dt.time.slice(4);       // Second
 
     if (dt.isUTC) {
-        toReturn += ' (UTC)';
+        toReturn += ' (UTC)';          // UTC time
     }
 
     return toReturn;
@@ -66,6 +70,7 @@ function formatTime(dt) {
 
 // Adds a new row to the Event List table, given an Event object retrieved from a JSON
 function addEventToTable(evt) {
+    // Prevent errors if single quotes are present in the summary or other text field
     var sanitized = encodeURIComponent(JSON.stringify(evt));
 
     var markup = "<tr><td><input type='radio' name='eventSelect' data-obj=\"" + sanitized + "\"></td><td>" + formatDate(evt.startDT) + "</td><td>"
@@ -181,7 +186,7 @@ function getFormData(form) {
 
 // Outputs a reasonable error message to the Status Panel
 function errorMsg(message, error) {
-    statusMsg('\n[ERROR] ' + message + '; Error message: ' + error.responseText + ' (' + error.status + ': ' + error.statusText + ')');
+    statusMsg('\n' + message + ': ' + error.responseText + ' (' + error.status + ': ' + error.statusText + ')');
 }
 
 function loadFile(file) {
@@ -205,7 +210,7 @@ function loadFile(file) {
             }
         },
         error: function(error) {
-            errorMsg('Encountered fatal error when attempting to load the file "' + file.name + '"', error);
+            errorMsg('Encountered an error when attempting to load the file "' + file.name + '"', error);
         }
     });
 }
@@ -318,7 +323,7 @@ $(document).ready(function() {
                 loadFile({"name": file});
             }
         }, error: function(error) {
-            errorMsg('Encountered a fatal error while loading saved .ics files', error);
+            errorMsg('Encountered an error while loading saved .ics files', error);
         }
     }); 
 
@@ -350,9 +355,6 @@ $(document).ready(function() {
         e.preventDefault();
         $(this).blur();
 
-        console.log($('#uploadForm')[0]);
-        console.log(JSON.stringify($('#uploadForm')[0]));
-
         // AJAX request
         $.ajax({
             url: "/upload",
@@ -371,7 +373,7 @@ $(document).ready(function() {
                 loadFile(file);
             },
             error: function(error) {
-                errorMsg('Encountered a fatal error when attempting to upload the file "' + file.name + '"', error);
+                errorMsg('Encountered an error when attempting to upload a file', error);
             }
         });
     });
@@ -431,36 +433,52 @@ $(document).ready(function() {
         }
 
         var formData = getFormData($('#calendarForm'));
-        statusMsg('From calendarForm, got form data: "' + JSON.stringify(formData) + '"');
+
+        // Verify a legal filename
+        var filename;
+        var split = formData.fileName.split('.');
+
+        // Filename contains no extension: the .ics extension can be safely added
+        if (split.length === 1) {
+            filename = split[0] + '.ics';
+            $('#calendarForm input[name="fileName"]').css('border-color', '');
+        } else {
+            // Filename contains an extension, but it is not the .ics extension
+            if (split.pop() !== 'ics') {
+                $('#calendarForm input[name="fileName"]').css('border-color', 'red');
+                alert('Files can only end with the .ics file extension. Please change the file name of the new calendar.');
+                return;
+            }
+
+            // Filename already ends with the .ics extension
+            $('#calendarForm input[name="fileName"]').css('border-color', '');
+            filename = formData.fileName;
+        }
 
         var calendar = createCalendar(formData);
         var eventJ = createEvent(formData);
-
-        statusMsg("[DEBUG]: Created event: \"" + JSON.stringify(eventJ) + "\"");
-        statusMsg("[DEBUG]: Created calendar: \"" + JSON.stringify(calendar) + "\"");
 
         $.ajax({
             type: "GET",
             url: "/writeCalendarJSON",
             data: {
-                "filename": formData.fileName,
+                "filename": filename,
                 "cal": JSON.stringify(calendar),
                 "evt": JSON.stringify(eventJ)
             },
             dataType: "json",
             success: function(cal) {
-                statusMsg('Got from /writeCalendarJSON: ' + JSON.stringify(cal));
                 if (cal.error != undefined) {
                     statusMsg('Encountered an error when creating a new Calendar file: "' + filename + '": ' + cal.message);
                    return;
                 }
 
-                statusMsg("Successfully created a new Calendar file: \"" + formData.fileName + "\"");
-                addCalendarToTable(formData.fileName, cal);
-                addCalendarToFileSelector(formData.fileName, cal);
+                statusMsg("Successfully created a new Calendar file: \"" + filename + "\"");
+                addCalendarToTable(filename, cal);
+                addCalendarToFileSelector(filename, cal);
             },
             error: function(error) {
-                errorMsg('Encountered fatal error when creating a new calendar: "' + filename + '"', error);
+                errorMsg('Encountered an error when creating a new calendar for "' + filename + '"', error);
             }
         });
 
@@ -469,6 +487,11 @@ $(document).ready(function() {
 
     // Add Event to Existing Calendar
     $('#addEventButton').click(function() {
+        if ($('#fileSelector').find(':selected').length == 0) {
+            statusMsg('Please select a calendar in the dropdown menu before trying to add an event to it');
+            $(this).blur();
+            return;
+        }
         $('#addEventModal').css("display", "block");
         $(this).blur();
     });
@@ -507,7 +530,6 @@ $(document).ready(function() {
                     return;
                 }
                 statusMsg('Added a new Event to "' + filename + '"');
-                console.log('\n\nCalendar with new event: "' + JSON.stringify(cal) + '"');
                 addCalendarToTable(filename, cal, false);
                 addCalendarToFileSelector(filename, cal);
             },
