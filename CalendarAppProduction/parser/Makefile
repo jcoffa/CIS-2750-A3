@@ -79,11 +79,46 @@ debug: $(OBJS)
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -fpic $< -o $(OUT)/$@
 
+AJAX: ajaxmain.c libcalendar.so
+	$(CC) $(CFLAGS) -L.. -lcalendar ajaxmain.c -o AJAX
+
+JSON: testJSON.c libcalendar.so
+	$(CC) $(CFLAGS) -L.. -lcalendar $< -o JSON
+
+FFI: ffiTest.c libcalendar.so
+	$(CC) $(CFLAGS) -L.. -lcalendar $< -o FFI
+
 #############
 # Utilities #
 #############
 
+runffi:
+	$(MAKE) FFI
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./FFI
+
+runajax:
+	$(MAKE) AJAX
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./AJAX
+
+runajaxmem:
+	$(MAKE) AJAX
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./AJAX
+
+runjson:
+	$(MAKE) JSON
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH ./JSON
+
+gdbjson:
+	$(MAKE) JSON
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH gdb ./JSON
+
+memoryjson:
+	$(MAKE) JSON
+	LD_LIBRARY_PATH=.:$(OUT):..:$$LD_LIBRARY_PATH valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./JSON
+
+
+
 # removes all .o and .so files
 clean:
-	rm -f $(OUT)/*.o $(OUT)/*.so ../libcalendar.so
+	rm -f -r $(OUT)/*.o $(OUT)/*.so AJAX JSON FFI ../libajaxstub.so ../libcalendar.so
 
