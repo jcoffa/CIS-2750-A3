@@ -1,12 +1,11 @@
 *.pdf
 *.zip
+*.so
 vgcore*
 node_modules
-package*.json
 CalendarApp/uploads/*
 CalendarApp/parser/AJAX
 CalendarApp/parser/bin/
 CalendarApp/parser/JSON
 CalendarApp/parser/FFI
-*.so
 Testing
