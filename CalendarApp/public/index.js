@@ -66,10 +66,9 @@ function formatTime(dt) {
 
 // Adds a new row to the Event List table, given an Event object retrieved from a JSON
 function addEventToTable(evt) {
-    // TODO found the problem. The (') in the summary compoennt (Joseph's Birthday) causes the string to terminate
-    var sanitized = JSON.stringify(evt).replace("'", "\\'");
+    var sanitized = encodeURIComponent(JSON.stringify(evt));
 
-    var markup = "<tr><td><input type='radio' name='eventSelect' data-obj='" + sanitized + "'></td><td>" + formatDate(evt.startDT) + "</td><td>"
+    var markup = "<tr><td><input type='radio' name='eventSelect' data-obj=\"" + sanitized + "\"></td><td>" + formatDate(evt.startDT) + "</td><td>"
                  + formatTime(evt.startDT) + "</td><td>" + evt.summary + "</td><td><b>" + evt.numProps + " (total)</b><br>" + (evt.numProps-3) + " (optional)</td><td>"
                  + evt.numAlarms + "</td></tr>";
 
@@ -351,6 +350,9 @@ $(document).ready(function() {
         e.preventDefault();
         $(this).blur();
 
+        console.log($('#uploadForm')[0]);
+        console.log(JSON.stringify($('#uploadForm')[0]));
+
         // AJAX request
         $.ajax({
             url: "/upload",
@@ -527,6 +529,7 @@ $(document).ready(function() {
             alert("You must select an Event using the radio buttons in the 'Select' column of the table in order to view its optional Properties");
             return;
         }
+        selectedEvent = JSON.parse(decodeURIComponent(selectedEvent));
 
         // Add all the properties to the table in the modal
         if (selectedEvent.properties.length === 0) {
@@ -557,10 +560,7 @@ $(document).ready(function() {
             alert("You must select an Event using the radio buttons in the 'Select' column of the table in order to view its Alarms");
             return;
         }
-        console.log('selectedEvent (raw): ' + selectedEvent);
-        console.log('selectedEvent (tag): ' + $(selectedEvent).prop('tagName'));
-        console.log('selectedEvent (string): ' + JSON.stringify(selectedEvent));
-
+        selectedEvent = JSON.parse(decodeURIComponent(selectedEvent));
 
         // Add all the alarms to the table in the modal
         if (selectedEvent.alarms.length === 0) {
