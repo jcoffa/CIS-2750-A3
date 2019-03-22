@@ -66,7 +66,10 @@ function formatTime(dt) {
 
 // Adds a new row to the Event List table, given an Event object retrieved from a JSON
 function addEventToTable(evt) {
-    var markup = "<tr><td><input type='radio' name='eventSelect' data-obj='" + JSON.stringify(evt) + "'></td><td>" + formatDate(evt.startDT) + "</td><td>"
+    // TODO found the problem. The (') in the summary compoennt (Joseph's Birthday) causes the string to terminate
+    var sanitized = JSON.stringify(evt).replace("'", "\\'");
+
+    var markup = "<tr><td><input type='radio' name='eventSelect' data-obj='" + sanitized + "'></td><td>" + formatDate(evt.startDT) + "</td><td>"
                  + formatTime(evt.startDT) + "</td><td>" + evt.summary + "</td><td><b>" + evt.numProps + " (total)</b><br>" + (evt.numProps-3) + " (optional)</td><td>"
                  + evt.numAlarms + "</td></tr>";
 
@@ -231,6 +234,9 @@ function dtStrToJSON(date, time, isUTC) {
     var toReturn = {};
 
     var dateToAdd = date.slice(0,4) + date.slice(5, 7) + date.slice(8);
+
+    // We will assume every DateTime is created on the turn of the minute,
+    // since the <input type=time> tag does not allow for seconds to be entered
     var timeToAdd = time.slice(0, 2) + time.slice(3, 5) + '00';
 
     toReturn.date = dateToAdd;
@@ -512,16 +518,49 @@ $(document).ready(function() {
     }); 
 
 
+    // Show Properties For Selected Event
+    $('#showPropertiesButton').click(function() {
+        $(this).blur();
+
+        var selectedEvent = $('#eventBody input[type="radio"]:checked').data('obj');
+        if (selectedEvent === undefined) {
+            alert("You must select an Event using the radio buttons in the 'Select' column of the table in order to view its optional Properties");
+            return;
+        }
+
+        // Add all the properties to the table in the modal
+        if (selectedEvent.properties.length === 0) {
+            var markup = "<tr><td></td><td>This event doesn't have any optional properties</td><tr>";
+            $('#eventPropertyBody').append(markup);
+        } else {
+            for (var prop of selectedEvent.properties) {
+                addPropertyToTable(prop);
+            }
+        }
+
+        // The modal can now be displayed, since all the data has been retrieved
+        $('#viewPropertiesModal').css('display', 'block');
+    });
+    $('#closeModalProperties').click(function() {
+        $(this).blur();
+        $('#viewPropertiesModal').css('display', 'none');
+        $('#eventPropertyBody').empty();
+    });
+
+
     // Show Alarms For Selected Event
     $('#showAlarmsButton').click(function() {
         $(this).blur();
-        var selectedEvent;
 
-        $('#eventBody tr td input:radio').each(function() {
-            if ($(this).prop('checked')) {
-                selectedEvent = $(this).data('obj');
-            }
-        });
+        var selectedEvent = $('#eventBody input[type="radio"]:checked').data('obj');
+        if (selectedEvent === undefined) {
+            alert("You must select an Event using the radio buttons in the 'Select' column of the table in order to view its Alarms");
+            return;
+        }
+        console.log('selectedEvent (raw): ' + selectedEvent);
+        console.log('selectedEvent (tag): ' + $(selectedEvent).prop('tagName'));
+        console.log('selectedEvent (string): ' + JSON.stringify(selectedEvent));
+
 
         // Add all the alarms to the table in the modal
         if (selectedEvent.alarms.length === 0) {
@@ -538,34 +577,5 @@ $(document).ready(function() {
         $(this).blur();
         $('#viewAlarmsModal').css('display', 'none');
         $('#eventAlarmBody').empty();
-    });
-
-
-    // Show Properties For Selected Event
-    $('#showPropertiesButton').click(function() {
-        $(this).blur();
-        var selectedEvent;
-
-        $('#eventBody tr td input:radio').each(function() {
-            if ($(this).prop('checked')) {
-                selectedEvent = $(this).data('obj');
-            }
-        });
-
-        // Add all the properties to the table in the modal
-        if (selectedEvent.properties.length === 0) {
-            var markup = "<tr><td></td><td>This event doesn't have any optional properties</td><tr>";
-            $('#eventPropertyBody').append(markup);
-        } else {
-            for (var prop of selectedEvent.properties) {
-                addPropertyToTable(prop);
-            }
-        }
-        $('#viewPropertiesModal').css('display', 'block');
-    });
-    $('#closeModalProperties').click(function() {
-        $(this).blur();
-        $('#viewPropertiesModal').css('display', 'none');
-        $('#eventPropertyBody').empty();
     });
 });
