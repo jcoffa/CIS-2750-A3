@@ -62,6 +62,13 @@ all: libcalendar.so
 libcalendar.so: $(OBJS)
 	$(CC) -shared $(addprefix $(OUT)/,$(OBJS)) -o ../$@
 
+debugmode: Debug.c Debug.h
+	$(CC) $(CFLAGS) -c -fpic -D DEBUG_MODE $< -o $(OUT)/Debug.o
+
+debug: $(OBJS)
+	$(MAKE) debugmode
+	$(MAKE) libcalendar.so
+
 # % = pattern match to any string (it stays consistent, so using it in multiple places
 #     will use the same string)
 # $< = the first prerequsiite of the rule (in this case, the .c source file)
@@ -113,5 +120,5 @@ memoryjson:
 
 # removes all .o and .so files
 clean:
-	rm -f -r $(OUT)/*.o $(OUT)/*.so AJAX ../libajaxstub.so ../libcalendar.so
+	rm -f -r $(OUT)/*.o $(OUT)/*.so AJAX JSON FFI ../libajaxstub.so ../libcalendar.so
 

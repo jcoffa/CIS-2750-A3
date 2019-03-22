@@ -13,8 +13,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#define DEBUG_MODE 1
-
 // Cyan ANSI escape code
 #define CYAN	"\x1b[36m"
 
