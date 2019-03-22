@@ -166,9 +166,10 @@ form input {
     animation-duration: 0.4s;
 }
 
+/* An animation for modals where they drop down from the top of the screen */
 @keyframes dropDownTop {
     from {
-        top: -300px;
+        top: -500px;
         opacity: 0;
     }
     to {
@@ -177,13 +178,13 @@ form input {
     }
 }
 
+/* The element that closes a modal is on the right of the modal header, and turns black on cursor hover */
 .close {
     color: #aaaaaa;
     float: right;
-    font-size: 28px;
+    font-size: 40px;
     font-weight: bold;
 }
-
 .close:hover, .close:focus {
     color: black;
     text-decoration: none;
