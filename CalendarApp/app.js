@@ -13,9 +13,9 @@ app.use(fileUpload());
 
 // Minimization
 const fs = require('fs');
-//const JavaScriptObfuscator = require('javascript-obfuscator');    // TODO reenable
+const JavaScriptObfuscator = require('javascript-obfuscator');
 
-// Important, pass in port as in `npm run dev 1234`, do not change
+// Important, pass in port as in `npm run dev 32432`, do not change
 const portNum = process.argv[2];
 
 // Send HTML at root, do not change
@@ -32,19 +32,15 @@ app.get('/style.css',function(req,res){
 // Send obfuscated JS, do not change
 app.get('/index.js',function(req,res){
   fs.readFile(path.join(__dirname+'/public/index.js'), 'utf8', function(err, contents) {
-    // TODO reenable
-    /*
     const minimizedContents = JavaScriptObfuscator.obfuscate(contents, {compact: true, controlFlowFlattening: true});
     res.contentType('application/javascript');
     res.send(minimizedContents._obfuscatedCode);
-    */
-    res.send(contents);
   });
 });
 
 //Respond to POST requests that upload files to uploads/ directory
 app.post('/upload', function(req, res) {
-  if(!req.files) {
+  if(Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
  
@@ -78,52 +74,17 @@ app.get('/uploads/:name', function(req , res){
 
 // Get an array of the absolute path of every file in the /uploads directory
 app.get('/uploadsContents', function(req, res) {
-    var toSend = fs.readdirSync(__dirname + '/uploads/');
-
-    res.send(toSend);
+    res.send(fs.readdirSync(__dirname + '/uploads/'));
 });
 
 
-// FFI library to use the backend written in C
+// FFI library to use the backend written in C. All functions return JSON strings of the new Calendar.
 let lib = ffi.Library('./libcalendar', {
     'createCalendarJSON'    : ['string', ['string']],   // filename
     'addEventJSON'          : ['string', ['string', 'string']], // filename, Event JSON string
     'writeCalFromJSON'      : ['string', ['string', 'string', 'string']],   // filename, Calendar JSON string, Event JSON string
 });
 
-app.get('/getFakeDT', function(req, res) {
-    var tempStr = lib.fakeDT();
-    console.log('Got the following fake DateTime from C: "' + tempStr + '"');
-    res.send(tempStr);
-});
-
-app.get('/getFakeProperty', function(req, res) {
-    var tempStr = lib.fakeProperty();
-    console.log('Got the following fake property from C: "' + tempStr + '"');
-    res.send(tempStr);
-});
-
-app.get('/getFakeAlarm', function(req, res) {
-    var tempStr = lib.fakeAlarm();
-    console.log('Got the following fake alarm from C: "' + tempStr + '"');
-    res.send(tempStr);
-});
-
-app.get('/getFakeEvent', function(req, res) {
-    var tempStr = lib.fakeEvent();
-    console.log('Got the following fake event from C: "' + tempStr + '"');
-    var parsed = JSON.parse(tempStr);
-    console.log('After parsing: ' + parsed);
-    res.send(parsed);
-});
-
-app.get('/getFakeCal', function(req, res) {
-    var tempStr = lib.fakeCal();
-    console.log('Got the following fake calendar from C: "' + tempStr + '"');
-    res.send(tempStr);
-});
-
-// Real callbacks getting real data from a C shared library using ffi
 
 // Given a file name (which will be appended to the path to the /uploads/ dir),
 // returns the Calendar JSON created from that file, or an error code JSON on a failure.
@@ -159,10 +120,9 @@ app.get('/getCal/:name', function(req, res) {
 //Given a file name, and an Event JSON, adds the Event provided by the JSON
 //to the specified calendar file
 app.get('/addEvent', function(req, res) {
-    console.log('\nraw req.query: ' + JSON.stringify(req.query));
-    console.log('\nfilename: ' + req.query.filename);
-    //console.log('\nevt: ' + JSON.stringify(req.query.evt));
-    console.log('\nevt: ' + req.query.evt);
+    //console.log('\nraw req.query: ' + JSON.stringify(req.query));
+    //console.log('\nfilename: ' + req.query.filename);
+    //console.log('\nevt: ' + req.query.evt);
 
     if (req.query.filename == undefined && req.query.evt == undefined) {
         return res.status(400).send('No parameters given');
@@ -181,12 +141,10 @@ app.get('/addEvent', function(req, res) {
 
 // Writes the given Calendar JSON object to the provided file path
 app.get('/writeCalendarJSON', function(req, res) {
-    console.log('\nraw req.query: ' + JSON.stringify(req.query));
-    console.log('\nfilename: ' + req.query.filename);
-    //console.log('\ncal: ' + JSON.stringify(req.query.cal));
-    //console.log('\nevt: ' + JSON.stringify(req.query.evt));
-    console.log('\ncal: ' + req.query.cal);
-    console.log('\nevt: ' + req.query.evt);
+    //console.log('\nraw req.query: ' + JSON.stringify(req.query));
+    //console.log('\nfilename: ' + req.query.filename);
+    //console.log('\ncal: ' + req.query.cal);
+    //console.log('\nevt: ' + req.query.evt);
 
     if (req.query.filename == undefined && req.query.cal == undefined && req.query.evt == undefined) {
         return res.status(400).send('No parameters given');
